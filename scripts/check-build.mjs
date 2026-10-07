@@ -74,6 +74,9 @@ for (const [route, h] of html) {
   // FAQPage: dieselbe Frage darf nur auf einer Seite ausgezeichnet sein (Google-Richtlinie für FAQ-Markup)
   for (const m of h.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) {
     let data; try { data = JSON.parse(m[1]); } catch { fail(route, 'ungültiges JSON-LD'); continue; }
+    if (data['@type'] === 'BreadcrumbList') for (const it of data.itemListElement) {
+      if (!it.item || /#/.test(it.item) || !it.item.startsWith(SITE + BASE)) fail(route, `Brotkrumen-URL ungültig: ${it.item}`);
+    }
     if (data['@type'] === 'FAQPage') for (const q of data.mainEntity) {
       if (faqSeen.has(q.name)) fail(route, `FAQ-Frage auch auf ${faqSeen.get(q.name)} ausgezeichnet: ${q.name}`);
       else faqSeen.set(q.name, route);

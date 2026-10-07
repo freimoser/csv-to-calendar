@@ -28,8 +28,7 @@ const legal = isLegal ? LEGAL_PAGES[key as 'imprint' | 'privacy' | 'terms'][lang
 if (def && g) {
   const crumbs = { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
     { '@type': 'ListItem', position: 1, name: home, item: url('home', lang) },
-    { '@type': 'ListItem', position: 2, name: guidesLabel, item: url('home', lang) + '#ratgeber' },
-    { '@type': 'ListItem', position: 3, name: g.crumb, item: url(key, lang) }
+    { '@type': 'ListItem', position: 2, name: g.crumb, item: url(key, lang) }
   ] };
   const faq = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: g.faq.filter((f) => f !== PHONE_FAQ_DE && f !== PHONE_FAQ_EN).map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) };
   const citation = def.sources.map((s) => ({ '@type': 'CreativeWork', name: SRC[s][lang], url: SRC[s].url }));
