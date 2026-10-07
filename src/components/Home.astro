@@ -1,0 +1,64 @@
+---
+import Base from '../layouts/Base.astro';
+import Tool from './tool/Tool';
+import { GUIDES as KEYS, path, url, type Lang } from '../i18n/routes';
+import { GUIDES } from '../content/guides';
+import { HOME } from '../content/home';
+import { SRC, STAND } from '../content/sources';
+import { LEGAL } from '../config/legal';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const c = HOME[lang];
+const schema = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: 'CSV to Calendar',
+    url: url('home', lang),
+    applicationCategory: 'UtilitiesApplication',
+    operatingSystem: 'Any (Web browser)',
+    browserRequirements: 'Requires JavaScript',
+    inLanguage: lang,
+    isAccessibleForFree: true,
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
+    description: c.description,
+    featureList: c.features.map((f) => f[0]),
+    author: { '@type': 'Person', name: LEGAL.operator, url: LEGAL.website }
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: c.faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } }))
+  }
+];
+---
+<Base lang={lang} page="home" title={c.title} description={c.description} schema={schema}>
+  <section class="hero" aria-labelledby="h1">
+    <h1 id="h1">{c.h1}</h1>
+    <p class="lead">{c.lead}</p>
+  </section>
+  <section id="werkzeug" aria-label={lang === 'de' ? 'Werkzeug' : 'Tool'}>
+    <Tool client:load lang={lang} />
+  </section>
+
+  <section aria-labelledby="features" class="stack mt-xl">
+    <h2 id="features">{c.featuresTitle}</h2>
+    <div class="guide-grid">
+      {c.features.map(([h, p]) => <div class="card"><h3 class="h3">{h}</h3><p class="muted m0">{p}</p></div>)}
+    </div>
+  </section>
+
+  <section aria-labelledby="faq" class="prose faq mt-xl">
+    <h2 id="faq">{c.faqTitle}</h2>
+    {c.faq.map((f) => <details><summary>{f.q}</summary><p>{f.a}</p></details>)}
+    <p class="source">{lang === 'de' ? `Stand ${STAND.de} · Quelle:` : `As of ${STAND.en} · Source:`} <a href={SRC.import.url} rel="noopener">{SRC.import[lang]}</a></p>
+  </section>
+
+  <section id="ratgeber" aria-labelledby="guides" class="mt-xl">
+    <h2 id="guides">{c.guidesTitle}</h2>
+    <div class="guide-grid related">
+      {KEYS.map((k) => <a href={path(k, lang)}><strong>{GUIDES[k][lang].h1}</strong><span>{GUIDES[k][lang].teaser}</span></a>)}
+    </div>
+  </section>
+</Base>

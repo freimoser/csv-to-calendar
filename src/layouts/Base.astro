@@ -1,0 +1,119 @@
+---
+import '@fontsource/atkinson-hyperlegible/latin-400.css';
+import '@fontsource/atkinson-hyperlegible/latin-700.css';
+import '@fontsource/atkinson-hyperlegible/latin-ext-400.css';
+import '@fontsource/atkinson-hyperlegible/latin-ext-700.css';
+import '../styles/site.css';
+import { ROUTES, GUIDES, path, url, asset, type Lang, type PageKey } from '../i18n/routes';
+import { tr } from '../i18n/ui';
+import { GUIDES as CONTENT } from '../content/guides';
+import { LEGAL } from '../config/legal';
+
+interface Props {
+  lang: Lang;
+  page: PageKey;
+  title: string;
+  description: string;
+  noindex?: boolean;
+  schema?: object[];
+}
+const { lang, page, title, description, noindex = false, schema = [] } = Astro.props;
+const other: Lang = lang === 'de' ? 'en' : 'de';
+const canonical = url(page, lang);
+const og = asset(`og/${page}-${lang}.png`);
+const t = (k: Parameters<typeof tr>[1]) => tr(lang, k);
+const footerGuides = GUIDES.map((k) => ({ href: path(k, lang), label: CONTENT[k][lang].crumb }));
+const site = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'CSV to Calendar',
+  url: url('home', lang),
+  inLanguage: lang,
+  publisher: { '@type': 'Person', name: LEGAL.operator, url: LEGAL.website }
+};
+---
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="google-site-verification" content="6pYvtFCnU7UFcQFajtMSkQ7tYMy3Z_Bt7teKiT5yKNg" />
+    {noindex ? <meta name="robots" content="noindex, follow" /> : <meta name="robots" content="index, follow, max-image-preview:large" />}
+    <link rel="canonical" href={canonical} />
+    {!noindex && <link rel="alternate" hreflang="de" href={url(page, 'de')} />}
+    {!noindex && <link rel="alternate" hreflang="en" href={url(page, 'en')} />}
+    {!noindex && <link rel="alternate" hreflang="x-default" href={url(page, 'en')} />}
+    <meta name="theme-color" content="#0e5a47" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#111513" media="(prefers-color-scheme: dark)" />
+    <meta name="referrer" content="no-referrer" />
+    <link rel="icon" href={asset('favicon.svg')} type="image/svg+xml" />
+    <link rel="icon" href={asset('favicon-96.png')} sizes="96x96" type="image/png" />
+    <link rel="icon" href={asset('favicon-48.png')} sizes="48x48" type="image/png" />
+    <link rel="apple-touch-icon" href={asset('apple-touch-icon.png')} />
+    <link rel="manifest" href={asset('manifest.webmanifest')} />
+    <meta property="og:type" content={page === 'home' ? 'website' : 'article'} />
+    <meta property="og:site_name" content="CSV to Calendar" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={'https://freimoser.github.io' + og} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content={lang === 'de' ? 'de_DE' : 'en_US'} />
+    <meta property="og:locale:alternate" content={lang === 'de' ? 'en_US' : 'de_DE'} />
+    <meta name="twitter:card" content="summary_large_image" />
+    {[site, ...schema].map((s) => <script type="application/ld+json" set:html={JSON.stringify(s)} />)}
+  </head>
+  <body>
+    <a class="skip" href="#inhalt">{lang === 'de' ? 'Zum Inhalt springen' : 'Skip to content'}</a>
+    <header class="site-header">
+      <div class="wrap">
+        <a class="logo" href={path('home', lang)}>
+          <span class="logo-mark" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M8 15l2.5 2.5L16 13"/></svg>
+          </span>
+          CSV to Calendar
+        </a>
+        <nav class="site-nav" aria-label={t('nav.main')}>
+          {page !== 'home' && <a href={path('home', lang) + '#werkzeug'}>{t('nav.tool')}</a>}
+          <a href={path('home', lang) + '#ratgeber'}>{t('nav.guides')}</a>
+          <a class="lang-switch" href={path(page, other)} hreflang={other} lang={other}>{other.toUpperCase()}<span class="sr-only"> – {other === 'de' ? 'Deutsch' : 'English'}</span></a>
+        </nav>
+      </div>
+    </header>
+    <main id="inhalt">
+      <div class="wrap">
+        <slot />
+      </div>
+    </main>
+    <footer class="site-footer">
+      <div class="wrap">
+        <div>
+          <h2>CSV to Calendar</h2>
+          <p class="muted">{t('footer.claim')}</p>
+          <p><a href={LEGAL.repo} rel="noopener">{t('footer.source')}</a></p>
+        </div>
+        <nav aria-label={t('nav.guides')}>
+          <h2>{t('nav.guides')}</h2>
+          <ul>{footerGuides.map((g) => <li><a href={g.href}>{g.label}</a></li>)}</ul>
+        </nav>
+        <nav aria-label={t('footer.legal')}>
+          <h2>{t('footer.legal')}</h2>
+          <ul>
+            <li><a href={path('imprint', lang)}>{lang === 'de' ? 'Impressum' : 'Legal notice'}</a></li>
+            <li><a href={path('privacy', lang)}>{lang === 'de' ? 'Datenschutz' : 'Privacy'}</a></li>
+            <li><a href={path('terms', lang)}>{lang === 'de' ? 'Nutzungsbedingungen' : 'Terms of use'}</a></li>
+          </ul>
+        </nav>
+      </div>
+    </footer>
+    <script>
+      // Offline-Betrieb: nach dem ersten Besuch läuft das Werkzeug auch ohne Internet.
+      if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+        addEventListener('load', () => navigator.serviceWorker.register(import.meta.env.BASE_URL + 'sw.js').catch(() => {}));
+      }
+    </script>
+  </body>
+</html>

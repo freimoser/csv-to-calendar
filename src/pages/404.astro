@@ -1,0 +1,10 @@
+---
+import Base from '../layouts/Base.astro';
+import { path } from '../i18n/routes';
+---
+<Base lang="de" page="home" title="Seite nicht gefunden – CSV to Calendar" description="Diese Seite gibt es nicht." noindex>
+  <article class="prose">
+    <h1>Seite nicht gefunden</h1>
+    <p>Diese Adresse gibt es nicht (mehr). <a href={path('home', 'de')}>Zum Werkzeug</a> · <a href={path('home', 'en')} lang="en">Open the tool (English)</a></p>
+  </article>
+</Base>
