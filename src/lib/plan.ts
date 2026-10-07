@@ -285,6 +285,8 @@ export interface SplitConfig {
   multi: 'all' | 'first';
   includeRest: boolean;
   restName: string;
+  /** Von Hand verschobene Termine: Termin-ID → Ziel-ID (oder 'rest'); hat Vorrang vor den Regeln */
+  manual?: Record<number, string>;
 }
 
 export const NO_SPLIT: SplitConfig = { mode: 'none', targets: [], multi: 'all', includeRest: true, restName: 'Sonstige' };
@@ -340,7 +342,17 @@ export function assign(groups: Group[], cfg: SplitConfig, cals: IcsCalendar[], l
   }
   const buckets: Bucket[] = cfg.targets.map((t) => ({ key: t.id, name: t.name, groups: [] }));
   const rest: Bucket = { key: 'rest', name: cfg.restName, groups: [], rest: true };
+  const manual = cfg.manual && Object.keys(cfg.manual).length ? cfg.manual : null;
+  const idx = new Map(cfg.targets.map((t, i) => [t.id, i]));
   for (const g of groups) {
+    if (manual) {
+      const hit = g.events.find((e) => manual[e.id] !== undefined);
+      if (hit) {
+        const to = manual[hit.id];
+        if (to === 'rest' || !idx.has(to)) rest.groups.push(g); else buckets[idx.get(to)!].groups.push(g);
+        continue;
+      }
+    }
     let hits = 0;
     for (let i = 0; i < cfg.targets.length; i++) {
       const t = cfg.targets[i];

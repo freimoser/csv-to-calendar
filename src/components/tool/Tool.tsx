@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { Lang } from '../../i18n/routes';
-import type { Loaded, PlanResult, TableInfo, Format } from '../../lib/engine';
+import type { Focus, Loaded, PlanResult, TableInfo, Format } from '../../lib/engine';
 import type { CleanOptions, Selection, SplitConfig } from '../../lib/plan';
 import type { Column, ConvertOptions, Role } from '../../lib/table';
 import { ALL, NO_CLEAN, NO_SPLIT } from '../../lib/plan';
 import { todayWall } from '../../lib/datetime';
 import { call, download, latest, warmUp } from './client';
 import { H, HELP, Icon, LangCtx, Status, useT } from './ui';
-import { Editor, type Tab } from './Editor';
+import { type Tab } from './Editor';
+import { Studio } from './Studio';
 import { Export } from './Export';
 
-type Screen = 'start' | 'loading' | 'date' | 'analysis' | 'editor' | 'export';
+type Screen = 'start' | 'loading' | 'date' | 'studio' | 'export';
 
 function detect(name: string, b: Uint8Array): 'ics' | 'zip' | 'csv' | 'xlsx' {
   const l = name.toLowerCase();
@@ -40,7 +41,7 @@ export default function Tool({ lang }: { lang: Lang }) {
 }
 
 function App() {
-  const { t, lang } = useT();
+  const { t, lang, n, b } = useT();
   const today = useMemo(() => todayWall(), []);
   const [screen, setScreen] = useState<Screen>('start');
   const [error, setError] = useState('');
@@ -54,7 +55,9 @@ function App() {
   const [split, setSplit] = useState<SplitConfig>({ ...NO_SPLIT, restName: t('s.restDefault') });
   const [format, setFormat] = useState<Format>('ics');
   const [plan, setPlan] = useState<PlanResult | null>(null);
-  const [tab, setTab] = useState<Tab>('range');
+  const [tab, setTab] = useState<Tab>('list');
+  const [focus, setFocus] = useState<Focus>(null);
+  const [editsVersion, setEditsVersion] = useState(0);
   const [simple, setSimple] = useState(true);
   const [drag, setDrag] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -69,6 +72,9 @@ function App() {
   }, []);
 
   useEffect(() => { topRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, [screen]);
+  useEffect(() => {
+    document.documentElement.classList.toggle('studio-mode', screen === 'studio' || screen === 'export');
+  }, [screen]);
 
   // Live-Berechnung bei jeder Änderung
   useEffect(() => {
@@ -78,7 +84,7 @@ function App() {
       if (r) setPlan(r);
     }, 120);
     return () => clearTimeout(h);
-  }, [loaded, sel, clean, split, format]);
+  }, [loaded, sel, clean, split, format, editsVersion]);
 
   // Tabelle neu umwandeln, wenn Spalten oder Optionen sich ändern
   useEffect(() => {
@@ -99,7 +105,8 @@ function App() {
     setSplit({ ...NO_SPLIT, restName: t('s.restDefault') });
     setFormat(kind === 'ics' || birthdays ? 'ics' : 'csv');
     setPlan(null);
-    setTab('range');
+    setTab('list');
+    setFocus(null);
     setSimple(true);
   }
 
@@ -123,7 +130,7 @@ function App() {
     const info = await call<Loaded>({ type: 'convert', roles: r, options: opts });
     setLoaded(info);
     if (!info.calendars[0]?.events) { setError(t('start.empty')); setScreen('start'); return; }
-    setScreen('analysis');
+    setScreen('studio');
   }
 
   async function openBytes(name: string, bytes: Uint8Array) {
@@ -138,7 +145,7 @@ function App() {
         setLoaded(info);
         resetEdits('ics');
         if (info.calendars.length > 1) setSplit((s) => ({ ...s, mode: 'source' }));
-        setScreen('analysis');
+        setScreen('studio');
       } else if (kind === 'csv') {
         await afterTable(await call<TableInfo>({ type: 'loadCsv', name, bytes }, [bytes.buffer]));
       } else {
@@ -167,7 +174,7 @@ function App() {
       setLoaded(info);
       resetEdits('ics');
       if (info.calendars.length > 1) setSplit((s) => ({ ...s, mode: 'source' }));
-      setScreen('analysis');
+      setScreen('studio');
     } catch (e) {
       setError(t('start.error', { msg: e instanceof Error ? e.message : String(e) }));
       setScreen('start');
@@ -183,7 +190,7 @@ function App() {
         setTable(null);
         setLoaded(r.info as Loaded);
         resetEdits('ics');
-        setScreen('analysis');
+        setScreen('studio');
       } else await afterTable(r.info as TableInfo);
     } catch (e) {
       setError(t('start.error', { msg: e instanceof Error ? e.message : String(e) }));
@@ -210,7 +217,7 @@ function App() {
     if (!rest.length) void convertAndShow(roles, opts);
   }
 
-  const stepIdx = screen === 'date' ? 1 : screen === 'analysis' || screen === 'editor' ? 2 : screen === 'export' ? 3 : 0;
+  const stepIdx = screen === 'date' ? 1 : screen === 'studio' ? 2 : screen === 'export' ? 3 : 0;
   const isTable = !!table;
 
   return (
@@ -288,26 +295,27 @@ function App() {
 
       {screen === 'date' && table && askCols.length > 0 && <DateQuestion table={table} col={askCols[0]} onAnswer={answerDate} />}
 
-      {screen === 'analysis' && loaded && (
-        <Analysis
-          loaded={loaded} table={table} plan={plan} birthdays={conv.birthdays}
-          onOther={() => { setScreen('start'); setLoaded(null); setTable(null); }}
-          onSimple={() => { setSimple(true); setScreen('export'); }}
-          onEdit={(tb) => {
-            setSimple(false);
-            setTab(tb);
-            if (tb === 'split' && split.mode === 'none' && loaded.calendars.length > 1) setSplit({ ...split, mode: 'source' });
-            setScreen('editor');
-          }}
-        />
-      )}
-
-      {screen === 'editor' && loaded && (
-        <Editor
+      {screen === 'studio' && loaded && (
+        <Studio
           loaded={loaded} table={table} plan={plan} tab={tab} setTab={setTab}
           sel={sel} setSel={setSel} clean={clean} setClean={setClean} split={split} setSplit={setSplit}
           roles={roles} setRoles={setRoles} conv={conv} setConv={setConv}
-          onBack={() => setScreen('analysis')} onNext={() => setScreen('export')}
+          onBack={() => setScreen('start')} onNext={() => setScreen('export')}
+          focus={focus} setFocus={setFocus} editsVersion={editsVersion} bumpEdits={() => setEditsVersion((v) => v + 1)}
+          sourceText={sourceTextOf(loaded, table, t, n, b)}
+          onExport={() => { setSimple(false); setScreen('export'); }}
+          onOther={() => { setScreen('start'); setLoaded(null); setTable(null); }}
+          overview={
+            <Analysis
+              loaded={loaded} table={table} plan={plan} birthdays={conv.birthdays} inStudio
+              onOther={() => { setScreen('start'); setLoaded(null); setTable(null); }}
+              onSimple={() => { setSimple(true); setScreen('export'); }}
+              onEdit={(tb) => {
+                setTab(tb);
+                if (tb === 'split' && split.mode === 'none' && loaded.calendars.length > 1) setSplit({ ...split, mode: 'source' });
+              }}
+            />
+          }
         />
       )}
 
@@ -315,7 +323,7 @@ function App() {
         <Export
           loaded={loaded} plan={plan} format={format} setFormat={setFormat} isTable={isTable}
           req={{ selection: sel, clean, split, format }} simple={simple}
-          onBack={() => { if (simple) { setSimple(false); setTab('range'); } setScreen('editor'); }}
+          onBack={() => { setSimple(false); setScreen('studio'); }}
         />
       )}
     </div>
@@ -364,6 +372,13 @@ function DateQuestion({ table, col, onAnswer }: { table: TableInfo; col: number;
   );
 }
 
+function sourceTextOf(loaded: Loaded, table: TableInfo | null, t: ReturnType<typeof useT>['t'], n: (x: number) => string, b: (x: number) => string): string {
+  const src = loaded.kind === 'table' && table
+    ? t('an.source.table', { enc: table.encoding === 'windows-1252' ? 'Windows/Excel' : table.encoding === 'utf-8' ? 'UTF-8' : table.encoding, delim: t(('an.delim.' + table.delimiter) as 'an.delim.;'), rows: n(table.rowCount) })
+    : /\.zip$/i.test(loaded.fileName) ? t('an.source.zip', { n: loaded.files.length }) : loaded.files.length > 1 ? t('an.source.many', { n: loaded.files.length }) : t('an.source.ics');
+  return `${src} · ${b(loaded.totalBytes)} · ${loaded.calendars.length === 1 ? t('an.calCount1') : t('an.calCount', { n: loaded.calendars.length })}`;
+}
+
 function Bars({ data }: { data: { year: number; count: number }[] }) {
   const { n } = useT();
   const shown = data.length > 24 ? data.filter((d) => d.count > 2) : data;
@@ -380,8 +395,8 @@ function Bars({ data }: { data: { year: number; count: number }[] }) {
   );
 }
 
-function Analysis({ loaded, table, plan, birthdays, onOther, onSimple, onEdit }: {
-  loaded: Loaded; table: TableInfo | null; plan: PlanResult | null; birthdays: boolean;
+function Analysis({ loaded, table, plan, birthdays, onOther, onSimple, onEdit, inStudio = false }: {
+  loaded: Loaded; table: TableInfo | null; plan: PlanResult | null; birthdays: boolean; inStudio?: boolean;
   onOther: () => void; onSimple: () => void; onEdit: (t: Tab) => void;
 }) {
   const { t, n, b, d, y } = useT();
@@ -404,7 +419,7 @@ function Analysis({ loaded, table, plan, birthdays, onOther, onSimple, onEdit }:
 
   return (
     <section class="stack" aria-labelledby="an-title">
-      <div class="head-row">
+      <div class={'head-row' + (inStudio ? ' sr-only' : '')}>
         <div>
           <h2 id="an-title" class="h2 break">{loaded.fileName}</h2>
           <p class="muted">{sourceText} · {b(loaded.totalBytes)} · {cals.length === 1 ? t('an.calCount1') : t('an.calCount', { n: cals.length })}</p>

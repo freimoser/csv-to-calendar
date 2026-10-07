@@ -7,12 +7,16 @@ import type { IcsCalendar, IcsEvent } from './ics';
 import { decodeText, readIcsInput, readIcsInputs } from './input';
 import { calendarStats, suggest, type CalendarStats, type Suggestion } from './analyze';
 import {
-  ALL, NO_CLEAN, NO_SPLIT, PART_LIMIT, assign, buildGroups, buildPart, cleanedSizes, partFileName, planCalendars, select,
+  ALL, NO_CLEAN, NO_SPLIT, PART_LIMIT, assign, buildGroups, buildPart, cleanedSizes, partFileName, planCalendars, ruleMatches, select,
   type CleanOptions, type Group, type Selection, type SplitConfig, type OutCalendar
 } from './plan';
 import { buildCsv, csvSizes, packCsv, templateCsv, type CsvPart } from './google-csv';
 import { fromRows, parseCsvText, tableToCalendar, type Column, type ConvertOptions, type RowIssue, type Table } from './table';
 import { wallParts } from './datetime';
+import { applyPatch, type Patch } from './edit';
+import { eventFromLines, timezoneId } from './ics';
+import { vtimezone, EXPORT_TIMEZONES } from './tz';
+import type { Rule } from './plan';
 import { encodeWindows1252, sampleBirthdayRows, samplePracticeCsv, samplePracticeIcs } from './sample';
 
 export type Format = 'ics' | 'csv';
@@ -57,7 +61,18 @@ export interface Loaded {
   dropped?: number;
 }
 
-export interface EventRow { id: number; cal: number; start: number | null; allDay: boolean; summary: string; series: boolean; line: number; row: number | null }
+export interface EventRow {
+  id: number; cal: number; start: number | null; end: number | null; allDay: boolean; summary: string; location: string;
+  series: boolean; exception: boolean; line: number; row: number | null; targets: string[]; edited: boolean; deleted: boolean;
+}
+
+export interface EventDetail {
+  id: number; cal: number; calName: string; summary: string; description: string; location: string;
+  start: number | null; end: number | null; allDay: boolean; tz: string; rrule: string | null; recurrenceId: string | null;
+  status: string; uid: string; lines: string[]; edited: boolean; attendees: number; alarms: number;
+}
+
+export type Focus = { kind: 'cal'; cal: number } | { kind: 'rule'; rule: Rule; label: string } | { kind: 'target'; key: string; label: string } | null;
 
 interface State {
   kind: 'ics' | 'table' | null;
@@ -73,18 +88,68 @@ interface State {
   icsSizes: Int32Array | null;
   csvSizes: Int32Array | null;
   rowOf: number[];
+  /** Bearbeitungen je Termin-Schlüssel (e<ID> bei ICS, r<Zeile> bei Tabellen) */
+  edits: Map<string, Patch>;
+  originals: Map<number, IcsEvent>;
 }
 
 const S: State = {
   kind: null, fileName: '', totalBytes: 0, files: [], skipped: [], cals: [], events: [], groups: [], table: null,
-  sizeKey: '', icsSizes: null, csvSizes: null, rowOf: []
+  sizeKey: '', icsSizes: null, csvSizes: null, rowOf: [], edits: new Map(), originals: new Map()
 };
 
-function setCalendars(cals: IcsCalendar[]) {
+function setCalendars(cals: IcsCalendar[], keepEdits = false) {
   S.cals = cals;
   S.events = cals.flatMap((c) => c.events);
+  S.originals = new Map();
+  if (!keepEdits) S.edits = new Map();
+  else for (const e of [...S.events]) { const p = S.edits.get(editKey(e)); if (p) replaceEvent(e, p); }
   S.groups = buildGroups(S.events);
   S.sizeKey = '';
+}
+
+function editKey(e: IcsEvent): string {
+  return S.kind === 'table' ? 'r' + (S.rowOf[e.id] ?? 'x' + e.id) : 'e' + e.id;
+}
+
+/** Ersetzt einen Termin durch seine bearbeitete Fassung (Original bleibt für „Zurücksetzen“ erhalten). */
+function replaceEvent(current: IcsEvent, p: Patch | null) {
+  const cal = S.cals.find((c) => c.index === current.cal)!;
+  const original = S.originals.get(current.id) ?? current;
+  let next = original;
+  if (p) {
+    let useTzid = cal.timezones.some((b) => timezoneId(b) === cal.timezone);
+    if (!useTzid && (p.start?.includes('T')) && EXPORT_TIMEZONES.includes(cal.timezone)) { cal.timezones.push(vtimezone(cal.timezone)); useTzid = true; }
+    next = eventFromLines(applyPatch(original, p, cal.timezone, useTzid), original.id, original.cal, cal.timezone, original.sourceLine);
+    S.originals.set(current.id, original);
+  } else S.originals.delete(current.id);
+  const i = S.events.findIndex((e) => e.id === current.id);
+  if (i >= 0) S.events[i] = next;
+  const j = cal.events.findIndex((e) => e.id === current.id);
+  if (j >= 0) cal.events[j] = next;
+}
+
+export function editEvent(id: number, p: Patch | null): EventDetail | null {
+  const ev = S.events.find((e) => e.id === id);
+  if (!ev) return null;
+  const key = editKey(ev);
+  if (p) S.edits.set(key, { ...(S.edits.get(key) ?? {}), ...p }); else S.edits.delete(key);
+  replaceEvent(ev, p ? S.edits.get(key)! : null);
+  S.groups = buildGroups(S.events);
+  S.sizeKey = '';
+  return getEvent(id);
+}
+
+export function getEvent(id: number): EventDetail | null {
+  const e = S.events.find((x) => x.id === id);
+  if (!e) return null;
+  const cal = S.cals.find((c) => c.index === e.cal);
+  return {
+    id: e.id, cal: e.cal, calName: cal?.name ?? '', summary: e.summary, description: e.description, location: e.location,
+    start: e.start?.wall ?? null, end: e.end?.wall ?? (e.start && e.minutes !== null ? e.start.wall + e.minutes * 60000 : null),
+    allDay: !!e.start?.allDay, tz: cal?.timezone ?? '', rrule: e.rrule, recurrenceId: e.recurrenceId, status: e.status, uid: e.uid,
+    lines: e.lines.slice(0, 300), edited: S.edits.has(editKey(e)), attendees: e.attendees, alarms: e.alarms
+  };
 }
 
 function loadedInfo(): Loaded {
@@ -143,7 +208,7 @@ export function convertTable(roles: Record<number, Column['role']>, o: ConvertOp
   for (const c of t.columns) if (roles[c.index]) c.role = roles[c.index];
   const r = tableToCalendar(t, o);
   S.rowOf = r.rowOf;
-  setCalendars([r.calendar]);
+  setCalendars([r.calendar], true);
   const info = loadedInfo();
   info.table = tableInfo(t);
   info.issues = r.issues.slice(0, 300);
@@ -241,16 +306,39 @@ export function build(req: PlanRequest, which: { cal: string; part: number } | '
   return { name: `${base}_fuer-google.zip`, data: zip, type: 'application/zip' };
 }
 
-/** Termine für die Liste „Einzelne Termine löschen“. */
-export function listEvents(selection: Selection, query: string, limit = 100): { rows: EventRow[]; total: number } {
-  const sel = select(S.groups, { ...selection, deleted: [] });
+/** Termine für den Editor: Suche, Fokus auf Kalender/Regel/Ziel, mit Ziel-Kalendern je Termin. */
+export function listEvents(req: PlanRequest, query: string, focus: Focus, offset = 0, limit = 100): { rows: EventRow[]; total: number } {
+  const deleted = new Set(req.selection.deleted);
+  const sel = select(S.groups, { ...req.selection, deleted: [] });
+  const { buckets } = assign(sel.groups, req.split, S.cals);
+  const targetsOf = new Map<string, string[]>();
+  if (req.split.mode !== 'none') for (const b of buckets) for (const g of b.groups) {
+    const list = targetsOf.get(g.key) ?? [];
+    list.push(b.name);
+    targetsOf.set(g.key, list);
+  }
+  const inFocus = (g: Group): boolean => {
+    if (!focus) return true;
+    if (focus.kind === 'cal') return g.cal === focus.cal;
+    if (focus.kind === 'rule') return ruleMatches(g.master, focus.rule);
+    const b = buckets.find((x) => x.key === focus.key);
+    return !!b && b.groups.includes(g);
+  };
   const q = query.trim().toLowerCase();
   const rows: EventRow[] = [];
   let total = 0;
-  for (const g of sel.groups) for (const e of g.events) {
-    if (q && !e.summary.toLowerCase().includes(q)) continue;
-    total++;
-    if (rows.length < limit) rows.push({ id: e.id, cal: e.cal, start: e.start?.wall ?? null, allDay: !!e.start?.allDay, summary: e.summary.slice(0, 140), series: !!e.rrule, line: e.sourceLine, row: S.kind === 'table' ? S.rowOf[e.id] ?? null : null });
+  for (const g of sel.groups) {
+    if (!inFocus(g)) continue;
+    for (const e of g.events) {
+      if (q && !e.summary.toLowerCase().includes(q) && !e.description.toLowerCase().includes(q) && !e.location.toLowerCase().includes(q)) continue;
+      total++;
+      if (total > offset && rows.length < limit) rows.push({
+        id: e.id, cal: e.cal, start: e.start?.wall ?? null, end: e.end?.wall ?? null, allDay: !!e.start?.allDay,
+        summary: e.summary.slice(0, 160), location: e.location.slice(0, 60), series: !!e.rrule, exception: !!e.recurrenceId,
+        line: e.sourceLine, row: S.kind === 'table' ? S.rowOf[e.id] ?? null : null, targets: targetsOf.get(g.key) ?? [],
+        edited: S.edits.has(editKey(e)), deleted: deleted.has(e.id)
+      });
+    }
   }
   return { rows, total };
 }
@@ -271,7 +359,9 @@ export type Request =
   | { type: 'convert'; roles: Record<number, Column['role']>; options: ConvertOptions }
   | { type: 'plan'; req: PlanRequest }
   | { type: 'build'; req: PlanRequest; which: { cal: string; part: number } | 'zip'; salt: string }
-  | { type: 'list'; selection: Selection; query: string }
+  | { type: 'list'; req: PlanRequest; query: string; focus: Focus; offset: number; limit: number }
+  | { type: 'get'; id: number }
+  | { type: 'edit'; id: number; patch: Patch | null }
   | { type: 'template' }
   | { type: 'sample'; which: 'practice' | 'csv' | 'birthdays'; lang: 'de' | 'en' };
 
@@ -284,7 +374,9 @@ export function handle(msg: Request): unknown {
     case 'convert': return convertTable(msg.roles, msg.options);
     case 'plan': return plan(msg.req);
     case 'build': return build(msg.req, msg.which, msg.salt);
-    case 'list': return listEvents(msg.selection, msg.query);
+    case 'list': return listEvents(msg.req, msg.query, msg.focus, msg.offset, msg.limit);
+    case 'get': return getEvent(msg.id);
+    case 'edit': return editEvent(msg.id, msg.patch);
     case 'template': return template();
     case 'sample': {
       if (msg.which === 'practice') {

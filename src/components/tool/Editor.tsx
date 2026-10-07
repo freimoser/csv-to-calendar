@@ -8,58 +8,14 @@ import { call } from './client';
 import { H, Icon, Status, useT } from './ui';
 import type { UiKey } from '../../i18n/ui';
 
-export type Tab = 'range' | 'split' | 'clean' | 'privacy' | 'columns' | 'check' | 'events';
+export type Tab = 'overview' | 'list' | 'range' | 'split' | 'clean' | 'privacy' | 'columns' | 'check' | 'events';
 
-interface Props {
+export interface EditorProps {
   loaded: Loaded; table: TableInfo | null; plan: PlanResult | null; tab: Tab; setTab: (t: Tab) => void;
   sel: Selection; setSel: (s: Selection) => void; clean: CleanOptions; setClean: (c: CleanOptions) => void;
   split: SplitConfig; setSplit: (s: SplitConfig) => void;
   roles: Record<number, Role>; setRoles: (r: Record<number, Role>) => void; conv: ConvertOptions; setConv: (c: ConvertOptions) => void;
   onBack: () => void; onNext: () => void;
-}
-
-export function Editor(p: Props) {
-  const { t, n } = useT();
-  const isTable = !!p.table;
-  const issues = p.loaded.issueCount ?? 0;
-  const openIssues = isTable ? (p.loaded.issues ?? []).filter((i) => !p.conv.fixes[i.row]).length + Math.max(0, issues - (p.loaded.issues?.length ?? 0)) : 0;
-  const tabs: { id: Tab; label: string }[] = [
-    { id: 'range', label: t('tab.range') },
-    { id: 'split', label: t('tab.split') },
-    { id: 'clean', label: t('tab.clean') },
-    { id: 'privacy', label: t('tab.privacy') },
-    ...(isTable ? [{ id: 'columns' as Tab, label: t('tab.columns') }] : []),
-    { id: 'check', label: t('tab.check') + (openIssues ? ` (${n(openIssues)})` : '') },
-    { id: 'events', label: t('tab.events') }
-  ];
-  return (
-    <section aria-labelledby="ed-title">
-      <div class="head-row">
-        <h2 id="ed-title" class="h2">{t('ed.title')}</h2>
-        <button type="button" class="link" onClick={p.onBack}>{t('ed.back')}</button>
-      </div>
-      <div class="editor-grid">
-        <div class="editor-main">
-          <div role="tablist" aria-label={t('ed.tabs')} class="tabs">
-            {tabs.map((x) => (
-              <button type="button" role="tab" id={'tab-' + x.id} aria-controls={'panel-' + x.id} aria-selected={p.tab === x.id}
-                class={'tab' + (p.tab === x.id ? ' active' : '')} onClick={() => p.setTab(x.id)}>{x.label}</button>
-            ))}
-          </div>
-          <div role="tabpanel" id={'panel-' + p.tab} aria-labelledby={'tab-' + p.tab} class="panel">
-            {p.tab === 'range' && <RangeTab {...p} />}
-            {p.tab === 'split' && <SplitTab {...p} />}
-            {p.tab === 'clean' && <CleanTab {...p} />}
-            {p.tab === 'privacy' && <PrivacyTab {...p} />}
-            {p.tab === 'columns' && isTable && <ColumnsTab {...p} />}
-            {p.tab === 'check' && <CheckTab {...p} />}
-            {p.tab === 'events' && <EventsTab {...p} />}
-          </div>
-        </div>
-        <LivePanel plan={p.plan} split={p.split} onNext={p.onNext} />
-      </div>
-    </section>
-  );
 }
 
 // ---------------------------------------------------------------- Live-Ergebnis
@@ -104,7 +60,7 @@ export function LivePanel({ plan, split, onNext }: { plan: PlanResult | null; sp
 
 // ---------------------------------------------------------------- Zeitraum & Filter
 
-function RangeTab({ loaded, sel, setSel }: Props) {
+function RangeTab({ loaded, sel, setSel }: EditorProps) {
   const { t, n, d } = useT();
   const yearCounts = useMemo(() => {
     const m = new Map<number, number>();
@@ -196,7 +152,7 @@ function RangeTab({ loaded, sel, setSel }: Props) {
 let tid = 0;
 const newId = () => 't' + Date.now().toString(36) + (++tid);
 
-function SplitTab({ loaded, split, setSplit, plan }: Props) {
+function SplitTab({ loaded, split, setSplit, plan }: EditorProps) {
   const { t, n } = useT();
   const multiCal = loaded.calendars.length > 1;
   const sug = loaded.suggestions;
@@ -308,7 +264,7 @@ function SplitTab({ loaded, split, setSplit, plan }: Props) {
 
 // ---------------------------------------------------------------- Aufräumen
 
-function CleanTab({ loaded, clean, setClean, sel, setSel }: Props) {
+function CleanTab({ loaded, clean, setClean, sel, setSel }: EditorProps) {
   const { t, n, b } = useT();
   const cals = loaded.calendars;
   const sum = (f: (c: Loaded['calendars'][number]) => number) => cals.reduce((a, c) => a + f(c), 0);
@@ -368,7 +324,7 @@ function CleanTab({ loaded, clean, setClean, sel, setSel }: Props) {
 
 // ---------------------------------------------------------------- Persönliche Daten
 
-function PrivacyTab({ loaded, table, clean, setClean, conv, setConv }: Props) {
+function PrivacyTab({ loaded, table, clean, setClean, conv, setConv }: EditorProps) {
   const { t, n } = useT();
   const cals = loaded.calendars;
   const phones = cals.reduce((a, c) => a + c.phoneInTitle + c.phoneInDescription, 0);
@@ -423,7 +379,7 @@ function shortPreview(kind: PiiKind, v: string): string {
 
 const ROLES: Role[] = ['subject', 'startDate', 'startTime', 'endDate', 'endTime', 'start', 'end', 'duration', 'allDay', 'description', 'location', 'private', 'name', 'birthday', 'extra', 'skip'];
 
-function ColumnsTab({ table, roles, setRoles, conv, setConv }: Props) {
+function ColumnsTab({ table, roles, setRoles, conv, setConv }: EditorProps) {
   const { t } = useT();
   if (!table) return null;
   const hasBirthday = Object.values(roles).includes('birthday');
@@ -476,7 +432,7 @@ function ColumnsTab({ table, roles, setRoles, conv, setConv }: Props) {
 
 // ---------------------------------------------------------------- Prüfen
 
-function CheckTab({ loaded, table, conv, setConv }: Props) {
+function CheckTab({ loaded, table, conv, setConv }: EditorProps) {
   const { t, n } = useT();
   if (!table) {
     const sum = (f: (c: Loaded['calendars'][number]) => number) => loaded.calendars.reduce((a, c) => a + f(c), 0);
@@ -532,40 +488,5 @@ function CheckTab({ loaded, table, conv, setConv }: Props) {
   );
 }
 
-// ---------------------------------------------------------------- Einzelne Termine
 
-function EventsTab({ sel, setSel, conv, setConv, table, loaded }: Props) {
-  const { t, n, d } = useT();
-  const [q, setQ] = useState('');
-  const [res, setRes] = useState<{ rows: EventRow[]; total: number } | null>(null);
-  useEffect(() => {
-    const h = setTimeout(async () => setRes(await call({ type: 'list', selection: sel, query: q })), 150);
-    return () => clearTimeout(h);
-  }, [q, sel, loaded]);
-  const deleted = table ? Object.values(conv.fixes).filter((x) => x === 'drop').length : sel.deleted.length;
-  const del = (r: EventRow) => {
-    if (table && r.row !== null) setConv({ ...conv, fixes: { ...conv.fixes, [r.row]: 'drop' } });
-    else setSel({ ...sel, deleted: [...sel.deleted, r.id] });
-  };
-  const hidden = new Set(sel.deleted);
-  return (
-    <div class="stack-sm">
-      <label class="field">{t('ev.search')}<input type="search" value={q} onInput={(e) => setQ((e.target as HTMLInputElement).value)} /></label>
-      {res && <div class="muted small">{t('ev.showing', { n: n(res.rows.length), total: n(res.total) })}{deleted > 0 && <> · {t('ev.deleted', { n: deleted })} <button type="button" class="link" onClick={() => table ? setConv({ ...conv, fixes: Object.fromEntries(Object.entries(conv.fixes).filter(([, v]) => v !== 'drop')) }) : setSel({ ...sel, deleted: [] })}>{t('ev.undo')}</button></>}</div>}
-      <div class="table-wrap">
-        <table class="data">
-          <tbody>
-            {(res?.rows ?? []).filter((r) => !hidden.has(r.id)).map((r) => (
-              <tr>
-                <td class="nowrap">{d(r.start)}</td>
-                <td class="nowrap muted">{r.allDay || r.start === null ? '' : new Date(r.start).toISOString().slice(11, 16)}</td>
-                <td class="break"><strong>{r.summary}</strong>{r.series && <span class="pill">{t('ev.series')}</span>}</td>
-                <td class="right"><button type="button" class="icon-btn" aria-label={t('ev.delete', { t: r.summary.slice(0, 40) })} onClick={() => del(r)}><Icon name="trash" size={20} /></button></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
+export { RangeTab, SplitTab, CleanTab, PrivacyTab, ColumnsTab, CheckTab };

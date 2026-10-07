@@ -42,20 +42,20 @@ const schema = [
     <Tool client:load lang={lang} />
   </section>
 
-  <section aria-labelledby="features" class="stack mt-xl">
+  <section aria-labelledby="features" class="stack mt-xl home-extra">
     <h2 id="features">{c.featuresTitle}</h2>
     <div class="guide-grid">
       {c.features.map(([h, p]) => <div class="card"><h3 class="h3">{h}</h3><p class="muted m0">{p}</p></div>)}
     </div>
   </section>
 
-  <section aria-labelledby="faq" class="prose faq mt-xl">
+  <section aria-labelledby="faq" class="prose faq mt-xl home-extra">
     <h2 id="faq">{c.faqTitle}</h2>
     {c.faq.map((f) => <details><summary>{f.q}</summary><p>{f.a}</p></details>)}
     <p class="source">{lang === 'de' ? `Stand ${STAND.de} · Quelle:` : `As of ${STAND.en} · Source:`} <a href={SRC.import.url} rel="noopener">{SRC.import[lang]}</a></p>
   </section>
 
-  <section id="ratgeber" aria-labelledby="guides" class="mt-xl">
+  <section id="ratgeber" aria-labelledby="guides" class="mt-xl home-extra">
     <h2 id="guides">{c.guidesTitle}</h2>
     <div class="guide-grid related">
       {KEYS.map((k) => <a href={path(k, lang)}><strong>{GUIDES[k][lang].h1}</strong><span>{GUIDES[k][lang].teaser}</span></a>)}
