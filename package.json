@@ -1,0 +1,35 @@
+{
+  "name": "ics-editor",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build && node scripts/postbuild.mjs && node scripts/check-build.mjs",
+    "check:launch": "node scripts/check-launch.mjs",
+    "assets": "npm i --no-save sharp && node scripts/gen-assets.mjs",
+    "preview": "astro preview",
+    "test": "vitest run",
+    "test:private": "vitest run --config vitest.private.config.ts",
+    "test:e2e": "playwright test",
+    "prepare": "git config core.hooksPath .githooks || true",
+    "build:lh": "LOCAL_ROBOTS=http://localhost:4321/robots.txt astro build && node scripts/postbuild.mjs",
+    "lighthouse": "node scripts/lighthouse.mjs",
+    "screenshots": "npm i --no-save sharp && node scripts/screenshots.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/papaparse": "^5.5.2",
+    "ical.js": "^2.2.1",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.3"
+  },
+  "dependencies": {
+    "@astrojs/preact": "^6.0.6",
+    "@fontsource/atkinson-hyperlegible": "^5.3.0",
+    "astro": "^7.3.6",
+    "fflate": "^0.8.3",
+    "papaparse": "^5.7.0",
+    "preact": "^10.29.8",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  }
+}

@@ -1,0 +1,25 @@
+node_modules/
+dist/
+.astro/
+test-results/
+playwright-report/
+.lighthouseci/
+.DS_Store
+
+# Echte Kalender- und Terminlisten gehören NIE ins Repo (Datenschutz).
+# Testdaten werden zur Laufzeit synthetisch erzeugt.
+*.ics
+*.ical
+*.zip
+*.csv
+*.tsv
+*.xlsx
+*.xls
+*.txt
+!public/llms.txt
+!src/pages/*.txt.ts
+private-samples/
+tests/.generated/
+
+# Lokale Werkzeug-Konfiguration
+.claude/

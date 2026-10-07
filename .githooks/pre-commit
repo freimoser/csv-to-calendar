@@ -1,0 +1,9 @@
+#!/bin/sh
+# Blockiert Kalender-, Tabellen- und Archivdateien – echte Daten dürfen nie ins Repo.
+blocked=$(git diff --cached --name-only --diff-filter=ACMR | grep -iE '\.(ics|ical|zip|csv|tsv|xlsx|xls)$')
+if [ -n "$blocked" ]; then
+  echo "Commit abgebrochen: Diese Dateien könnten echte Termin- oder Kundendaten enthalten:"
+  echo "$blocked"
+  echo "Vorlagen werden beim Build erzeugt; Testdaten erzeugen die Tests selbst."
+  exit 1
+fi

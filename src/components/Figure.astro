@@ -1,0 +1,14 @@
+---
+// Bildschirmfoto des ICS Editors mit erfundenen Beispieldaten (erzeugt von scripts/screenshots.mjs).
+import IMG from '../content/images.json';
+import { asset, type Lang } from '../i18n/routes';
+interface Props { name: string; lang: Lang; caption: string; eager?: boolean }
+const { name, lang, caption, eager = false } = Astro.props;
+const meta = (IMG as Record<string, { w: number; h: number }>)[`${name}-${lang}`];
+---
+{meta && (
+  <figure class="shot">
+    <img src={asset(`img/${name}-${lang}.webp`)} width={meta.w} height={meta.h} alt={caption} loading={eager ? 'eager' : 'lazy'} decoding="async" />
+    <figcaption>{caption}</figcaption>
+  </figure>
+)}
