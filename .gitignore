@@ -19,3 +19,6 @@ playwright-report/
 !public/llms.txt
 private-samples/
 tests/.generated/
+
+# Lokale Werkzeug-Konfiguration
+.claude/

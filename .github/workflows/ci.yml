@@ -1,0 +1,27 @@
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [aufbau]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Einheitentests (synthetische Testdaten)
+        run: npm test
+      - name: Build und Build-Prüfung (SEO, Links, CSP, Sitemap)
+        run: npm run build
+      - name: Browser-Tests (360 px, Tastatur, keine Netzwerkanfragen, offline)
+        run: |
+          npx playwright install --with-deps chromium
+          npm run test:e2e
+      - name: Livegang-Prüfung (nur Hinweis im Pull Request)
+        run: node scripts/check-launch.mjs --warn-only
