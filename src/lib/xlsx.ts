@@ -6,6 +6,11 @@ import { excelSerialToDate, fromRows, type Table } from './table';
 const p2 = (n: number) => String(n).padStart(2, '0');
 
 export async function readXlsx(bytes: Uint8Array, fileName: string): Promise<Table> {
+  return fromRows(await readXlsxRows(bytes), fileName, 'Excel', '');
+}
+
+/** Liest das erste Tabellenblatt als Text-Zeilen. */
+export async function readXlsxRows(bytes: Uint8Array): Promise<string[][]> {
   const XLSX = await import('xlsx');
   const wb = XLSX.read(bytes, { type: 'array', cellNF: true, cellDates: false, cellText: false });
   const ws = wb.Sheets[wb.SheetNames[0]];
@@ -34,7 +39,7 @@ export async function readXlsx(bytes: Uint8Array, fileName: string): Promise<Tab
       rows.push(row);
     }
   }
-  return fromRows(rows, fileName, 'Excel', '');
+  return rows;
 }
 
 /** Erzeugt eine .xlsx-Datei aus Zeilen. Zellen der Form TT.MM.JJJJ werden echte Excel-Datumswerte. */

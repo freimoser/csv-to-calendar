@@ -404,18 +404,27 @@ function headerFor(cals: IcsCalendar[], groups: Group[], name: string) {
 export function packParts(groups: Group[], sizes: Int32Array, overhead: number, limit = PART_LIMIT): OutPart[] {
   const parts: OutPart[] = [];
   let cur: OutPart | null = null;
+  let singles = 0;
   for (const g of groups) {
     let b = 0;
     for (const e of g.events) b += sizes[e.id];
     if (!cur || (cur.bytes + b > limit && cur.groups.length > 0)) {
       cur = { index: parts.length, groups: [], events: 0, bytes: overhead, from: g.first, to: g.first };
       parts.push(cur);
+      singles = 0;
     }
     cur.groups.push(g);
     cur.events += g.events.length;
     cur.bytes += b;
-    cur.from = Math.min(cur.from, g.first);
-    cur.to = Math.max(cur.to, g.series ? g.first : g.last);
+    // Zeitraum eines Teils: nach Einzelterminen; alte Serien (z. B. Geburtstage ab 1960) verzerren ihn sonst
+    if (!g.series) {
+      cur.from = singles === 0 ? g.first : Math.min(cur.from, g.first);
+      cur.to = singles === 0 ? g.last : Math.max(cur.to, g.last);
+      singles++;
+    } else if (singles === 0) {
+      cur.from = Math.min(cur.from, g.first);
+      cur.to = Math.max(cur.to, g.first);
+    }
   }
   return parts;
 }

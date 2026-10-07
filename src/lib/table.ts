@@ -150,6 +150,11 @@ export function detectColumns(t: Table): Column[] {
     }
     used.add(c.role);
   }
+  // Gibt es ein Termin-Datum, ist ein Geburtsdatum nur eine Zusatzangabe (z. B. Patientendaten)
+  if (used.has('startDate') || used.has('start')) {
+    for (const c of cols) if (c.role === 'birthday') c.role = 'extra';
+    used.delete('birthday');
+  }
   // Kein Titel, aber ein Name → Name als Titel
   if (!used.has('subject')) {
     const nameCol = cols.find((c) => c.role === 'name');

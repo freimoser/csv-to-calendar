@@ -40,6 +40,9 @@ describe('Deutsche Semikolon-CSV im Windows-Zeichensatz', () => {
     expect(role('Behandlung')).toBe('subject');
     expect(role('Raum')).toBe('location');
     expect(t.columns.find((c) => c.header === 'Datum')!.order).toBe('dmy');
+    // Geburtsdatum der Patienten ist hier keine Geburtstagsliste
+    expect(t.columns.some((c) => c.role === 'birthday')).toBe(false);
+    expect(role('Geburtsdatum')).toBe('extra');
   });
 
   it('erkennt persönliche Daten (Patientennamen, Telefonnummern, Geburtsdaten)', () => {

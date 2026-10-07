@@ -235,7 +235,7 @@ export function suggest(cals: IcsCalendar[], evs: IcsEvent[]): Suggestion[] {
   // Titel-Anfang (Terminarten wie "OP", "Impfung", "Online")
   const pre = collect(masters, (e) => {
     const w = e.summary.trim().split(/\s+/)[0];
-    return w && w.length <= 20 ? w : null;
+    return w && w.length <= 20 && !STATUS_WORDS.includes(w.toLowerCase()) ? w : null;
   });
   const preVals = pre.values.filter((v) => v.count / nm >= 0.02).slice(0, 12);
   const preCov = preVals.reduce((a, v) => a + v.count, 0) / nm;
