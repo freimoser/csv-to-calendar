@@ -239,7 +239,7 @@ export function headerLines(cal: Pick<IcsCalendar, 'header' | 'timezone'>, name:
   const out: string[] = ['BEGIN:VCALENDAR'];
   const has = (n: string) => cal.header.some((l) => splitProp(l).name === n);
   if (!has('VERSION')) out.push('VERSION:2.0');
-  if (!has('PRODID')) out.push('PRODID:-//CSV to Calendar//freimoser.github.io//DE');
+  if (!has('PRODID')) out.push('PRODID:-//ICS Editor//freimoser.github.io//DE');
   for (const l of cal.header) {
     const n = splitProp(l).name;
     if (n === 'X-WR-CALNAME' && name !== null) continue;

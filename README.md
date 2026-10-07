@@ -1,17 +1,15 @@
-# CSV to Calendar
+# ICS Editor
 
-CSV & Excel in Google Kalender – auch über 1 MB. Läuft komplett im Browser.
-**Live (nach dem Merge):** https://freimoser.github.io/csv-to-calendar/
+ICS-Dateien und Google-Kalender-Exporte im Browser bearbeiten, aufteilen und konvertieren – ohne Upload.
+**Live:** https://freimoser.github.io/ics-editor/
 
-Ein kostenloses Werkzeug, das ICS-Dateien (auch den ZIP-Export von Google), CSV- und Excel-Dateien so vorbereitet,
-dass Google Kalender sie annimmt:
-
-- **Analysieren:** Kalender in der Datei, Termine, Zeitraum, Größe, Serien, Auffälligkeiten
-- **Aufteilen:** nach Kalendern, Personen-Kürzeln, Stichwörtern oder Jahren – z. B. beim Umzug auf Google Workspace
+- **Editor:** Kalender der Datei, erkannte Unterkalender (z. B. Mitarbeiter-Kürzel), Terminliste und Monatsansicht,
+  Termine bearbeiten, löschen und in andere Kalender verschieben
+- **Aufteilen:** nach Kalendern, Kürzeln, Stichwörtern oder Jahren – z. B. beim Umzug auf Google Workspace
 - **Unter 1 MB bringen:** Teile unter 950 KB, Serien bleiben mit ihren Ausnahmen zusammen, Größe byte-genau
-- **Tabellen:** Semikolon, Windows-Zeichensatz, deutsche Spalten, Datumsformate (fragt bei 03/04 nach), Excel-Datumswerte
+- **CSV & Excel:** Semikolon, Windows-Zeichensatz, deutsche Spalten, Datumsformate (fragt bei 03/04 nach),
+  Excel-Datumswerte, Geburtstagslisten (29.2. → 28.2.)
 - **Datenschutz:** erkennt Telefonnummern, E-Mails, Namen, Geburtsdaten und bietet Weglassen/Kürzen an
-- **Geburtstage:** jährliche ganztägige Termine per ICS (29.2. → 28.2.)
 
 Nichts wird hochgeladen. Die Seite setzt eine Content-Security-Policy, deren `connect-src` nur die öffentliche
 `robots.txt` der Domain erlaubt; die Rechenarbeit läuft in einem Web Worker aus einer `blob:`-Adresse, für den dieselbe
@@ -21,7 +19,8 @@ Richtlinie gilt. Ein Browser-Test prüft, dass beim Verarbeiten keine Netzwerkan
 
 ```bash
 npm ci
-npm run dev          # http://localhost:4322/csv-to-calendar/
+npm run dev          # http://localhost:4322/ics-editor/
+npm run screenshots  # Bildschirmfotos für Startseite und Ratgeber (braucht npm run preview)
 npm test             # Einheitentests (Vitest)
 npm run build        # Build + Prüfung (SEO, Links, CSP, Sitemap, hreflang)
 npm run test:e2e     # Browser-Tests (Playwright)

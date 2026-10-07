@@ -1,5 +1,5 @@
 {
-  "name": "csv-to-calendar",
+  "name": "ics-editor",
   "private": true,
   "type": "module",
   "scripts": {
@@ -13,7 +13,8 @@
     "test:e2e": "playwright test",
     "prepare": "git config core.hooksPath .githooks || true",
     "build:lh": "LOCAL_ROBOTS=http://localhost:4321/robots.txt astro build && node scripts/postbuild.mjs",
-    "lighthouse": "node scripts/lighthouse.mjs"
+    "lighthouse": "node scripts/lighthouse.mjs",
+    "screenshots": "npm i --no-save sharp && node scripts/screenshots.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",

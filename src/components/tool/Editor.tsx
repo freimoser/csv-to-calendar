@@ -8,7 +8,7 @@ import { call } from './client';
 import { H, Icon, Status, useT } from './ui';
 import type { UiKey } from '../../i18n/ui';
 
-export type Tab = 'overview' | 'list' | 'range' | 'split' | 'clean' | 'privacy' | 'columns' | 'check' | 'events';
+export type Tab = 'overview' | 'list' | 'range' | 'split' | 'clean' | 'privacy' | 'columns' | 'check' | 'export';
 
 export interface EditorProps {
   loaded: Loaded; table: TableInfo | null; plan: PlanResult | null; tab: Tab; setTab: (t: Tab) => void;

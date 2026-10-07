@@ -519,7 +519,7 @@ export function tableToCalendar(t: Table, o: ConvertOptions): ConvertResult {
 
   const calendar: IcsCalendar = {
     index: 0, name: t.fileName.replace(/\.[^.]+$/, ''), fileName: t.fileName, timezone: tz,
-    header: ['VERSION:2.0', 'PRODID:-//CSV to Calendar//freimoser.github.io//DE', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH'],
+    header: ['VERSION:2.0', 'PRODID:-//ICS Editor//freimoser.github.io//DE', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH'],
     timezones: events.some((e) => e.start && !e.start.allDay) ? [vtimezone(tz)] : [],
     events, otherComponents: {}, sourceBytes: 0, warnings: []
   };

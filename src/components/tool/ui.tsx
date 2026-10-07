@@ -49,7 +49,8 @@ const ICONS: Record<string, ComponentChildren> = {
   broom: <><path d="M19 4l-7 7" /><path d="M5 21c0-4 2-7 6-9l2 2c-2 4-5 6-8 7z" /></>,
   calendar: <><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4M8 15l2.5 2.5L16 13" /></>,
   plus: <path d="M12 5v14M5 12h14" />,
-  monitor: <><rect x="2" y="4" width="20" height="13" rx="2" /><path d="M8 21h8M12 17v4" /></>
+  monitor: <><rect x="2" y="4" width="20" height="13" rx="2" /><path d="M8 21h8M12 17v4" /></>,
+  list: <path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01" />
 };
 
 export function Icon({ name, size = 24, class: cls }: { name: keyof typeof ICONS | string; size?: number; class?: string }) {

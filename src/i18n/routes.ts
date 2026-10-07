@@ -2,8 +2,8 @@
 
 export type Lang = 'de' | 'en';
 export const SITE = 'https://freimoser.github.io';
-export const BASE = '/csv-to-calendar/';
-export const LASTMOD = '2026-10-07';
+export const BASE = '/ics-editor/';
+export const LASTMOD = '2026-10-08';
 
 export const ROUTES = {
   home: { de: '', en: 'en/' },
@@ -15,6 +15,7 @@ export const ROUTES = {
   ics: { de: 'ics-datei-google-kalender-importieren/', en: 'en/import-ics-file-to-google-calendar/' },
   convert: { de: 'csv-in-ics-umwandeln/', en: 'en/csv-to-ics-converter/' },
   undo: { de: 'google-kalender-import-rueckgaengig/', en: 'en/undo-google-calendar-import/' },
+  about: { de: 'ueber/', en: 'en/about/' },
   imprint: { de: 'impressum/', en: 'en/legal-notice/' },
   privacy: { de: 'datenschutz/', en: 'en/privacy/' },
   terms: { de: 'nutzungsbedingungen/', en: 'en/terms/' }
@@ -24,8 +25,10 @@ export type PageKey = keyof typeof ROUTES;
 
 export const GUIDES: PageKey[] = ['tooLarge', 'importFails', 'split', 'limits', 'ics', 'excel', 'convert', 'undo'];
 export const LEGAL: PageKey[] = ['imprint', 'privacy', 'terms'];
+/** indexierbare Infoseiten außerhalb der Ratgeber */
+export const INFO: PageKey[] = ['about'];
 
-/** Pfad mit Basis, z. B. /csv-to-calendar/en/ */
+/** Pfad mit Basis, z. B. /ics-editor/en/ */
 export function path(key: PageKey, lang: Lang): string {
   return BASE + ROUTES[key][lang];
 }

@@ -4,7 +4,7 @@ import { join, relative } from 'node:path';
 import { createHash } from 'node:crypto';
 
 const dist = new URL('../dist/', import.meta.url).pathname.replace(/%20/g, ' ');
-const BASE = '/csv-to-calendar/';
+const BASE = '/ics-editor/';
 const files = [];
 (function walk(d) {
   for (const f of readdirSync(d)) {

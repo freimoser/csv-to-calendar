@@ -2,7 +2,6 @@ import { useState } from 'preact/hooks';
 import type { Format, Loaded, PlanRequest, PlanResult } from '../../lib/engine';
 import { call, download } from './client';
 import { H, HELP, Icon, useT } from './ui';
-import { LivePanel } from './Editor';
 
 interface Props {
   loaded: Loaded; plan: PlanResult | null; format: Format; setFormat: (f: Format) => void; isTable: boolean;
@@ -28,7 +27,7 @@ export function Export({ plan, format, setFormat, req, simple, onBack }: Props) 
     <section class="stack" aria-labelledby="ex-title">
       <div class="head-row">
         <h2 id="ex-title" class="h2">{totalParts > 1 ? t('ex.titleParts', { n: totalParts }) : t('ex.title')}</h2>
-        <button type="button" class="link" onClick={onBack}>{simple ? t('ex.backSimple') : t('ex.back')}</button>
+        {simple && <button type="button" class="link" onClick={onBack}>{t('ex.backSimple')}</button>}
       </div>
 
       <div class="callout warn-box">
@@ -58,8 +57,8 @@ export function Export({ plan, format, setFormat, req, simple, onBack }: Props) 
         {format === 'csv' && plan && plan.csv.skippedSeries > 0 && <p class="note warn-text"><Icon name="warn" size={22} /> {t('ex.csvSeries', { n: n(plan.csv.skippedSeries) })}</p>}
       </fieldset>
 
-      <div class="editor-grid">
-        <div class="editor-main stack">
+      <div>
+        <div class="stack">
           {!plan && <div class="card"><span class="spinner" aria-hidden="true" /></div>}
           {plan && plan.calendars.map((c) => (
             <div class="card">
@@ -111,7 +110,6 @@ export function Export({ plan, format, setFormat, req, simple, onBack }: Props) 
             </details>
           </div>
         </div>
-        <LivePanel plan={plan} split={req.split} />
       </div>
     </section>
   );

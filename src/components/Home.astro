@@ -6,6 +6,9 @@ import { GUIDES } from '../content/guides';
 import { HOME } from '../content/home';
 import { SRC, STAND } from '../content/sources';
 import { LEGAL } from '../config/legal';
+import { asset } from '../i18n/routes';
+import Figure from './Figure.astro';
+import IMG from '../content/images.json';
 
 interface Props { lang: Lang }
 const { lang } = Astro.props;
@@ -14,7 +17,7 @@ const schema = [
   {
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
-    name: 'CSV to Calendar',
+    name: 'ICS Editor',
     url: url('home', lang),
     applicationCategory: 'UtilitiesApplication',
     operatingSystem: 'Any (Web browser)',
@@ -24,7 +27,8 @@ const schema = [
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
     description: c.description,
     featureList: c.features.map((f) => f[0]),
-    author: { '@type': 'Person', name: LEGAL.operator, url: LEGAL.website }
+    screenshot: (IMG as Record<string, unknown>)[`editor-${lang}`] ? 'https://freimoser.github.io' + asset(`img/editor-${lang}.webp`) : undefined,
+    author: { '@type': 'Person', name: LEGAL.operator, url: url('about', lang), sameAs: [LEGAL.linkedin, LEGAL.website] }
   },
   {
     '@context': 'https://schema.org',
@@ -34,12 +38,19 @@ const schema = [
 ];
 ---
 <Base lang={lang} page="home" title={c.title} description={c.description} schema={schema}>
-  <section class="hero" aria-labelledby="h1">
+  <section class="hero hero-app" aria-labelledby="h1">
     <h1 id="h1">{c.h1}</h1>
     <p class="lead">{c.lead}</p>
   </section>
   <section id="werkzeug" aria-label={lang === 'de' ? 'Werkzeug' : 'Tool'}>
     <Tool client:load lang={lang} />
+  </section>
+
+  <section aria-labelledby="how" class="stack mt-xl home-extra">
+    <h2 id="how">{c.howTitle}</h2>
+    <div class="figure-grid">
+      {c.how.map(([img, text]) => <Figure name={img} lang={lang} caption={text} />)}
+    </div>
   </section>
 
   <section aria-labelledby="features" class="stack mt-xl home-extra">

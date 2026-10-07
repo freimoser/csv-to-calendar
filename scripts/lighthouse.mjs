@@ -10,7 +10,7 @@ const dir = mkdtempSync(join(tmpdir(), 'lh-'));
 let ok = true;
 for (const p of pages) {
   const out = join(dir, 'r.json');
-  execFileSync('npx', ['--yes', 'lighthouse@latest', `http://localhost:4321/csv-to-calendar/${p}`, '--quiet', '--chrome-flags=--headless=new',
+  execFileSync('npx', ['--yes', 'lighthouse@latest', `http://localhost:4321/ics-editor/${p}`, '--quiet', '--chrome-flags=--headless=new',
     '--only-categories=performance,accessibility,best-practices,seo', '--output=json', `--output-path=${out}`], { stdio: 'ignore' });
   const r = JSON.parse(readFileSync(out, 'utf8'));
   const scores = Object.values(r.categories).map((c) => [c.id, Math.round(c.score * 100)]);

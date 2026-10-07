@@ -1,5 +1,11 @@
 // Belegte Quellen. Stand jeweils 7.10.2026 – nur diese Fakten werden auf der Website behauptet.
+/** Datum, an dem die Google-Quellen geprüft wurden */
 export const STAND = { de: '7. Oktober 2026', en: '7 October 2026', iso: '2026-10-07' };
+/** Datum der letzten inhaltlichen Aktualisierung der Seiten */
+export const UPDATED = { de: '8. Oktober 2026', en: '8 October 2026', iso: '2026-10-08' };
+
+/** Eigener Test mit einem echten, anonymen Google-Kalender-Export (nur lokal ausgewertet, ohne Namen) */
+export const OWN_TEST = { date: { de: 'Oktober 2026', en: 'October 2026' } };
 
 export const SRC = {
   import: { url: 'https://support.google.com/calendar/answer/37118', de: 'Google Kalender-Hilfe: Termine in Google Kalender importieren', en: 'Google Calendar Help: Import events to Google Calendar' },

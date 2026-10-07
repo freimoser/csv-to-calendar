@@ -28,10 +28,10 @@ const footerGuides = GUIDES.map((k) => ({ href: path(k, lang), label: CONTENT[k]
 const site = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
-  name: 'CSV to Calendar',
+  name: 'ICS Editor',
   url: url('home', lang),
   inLanguage: lang,
-  publisher: { '@type': 'Person', name: LEGAL.operator, url: LEGAL.website }
+  publisher: { '@type': 'Person', name: LEGAL.operator, url: url('about', lang) }
 };
 ---
 <!doctype html>
@@ -56,7 +56,7 @@ const site = {
     <link rel="apple-touch-icon" href={asset('apple-touch-icon.png')} />
     <link rel="manifest" href={asset('manifest.webmanifest')} />
     <meta property="og:type" content={page === 'home' ? 'website' : 'article'} />
-    <meta property="og:site_name" content="CSV to Calendar" />
+    <meta property="og:site_name" content="ICS Editor" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     {withCanonical && <meta property="og:url" content={canonical} />}
@@ -76,7 +76,7 @@ const site = {
           <span class="logo-mark" aria-hidden="true">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M8 15l2.5 2.5L16 13"/></svg>
           </span>
-          CSV to Calendar
+          ICS Editor
         </a>
         <nav class="site-nav" aria-label={t('nav.main')}>
           {page !== 'home' && <a href={path('home', lang) + '#werkzeug'}>{t('nav.tool')}</a>}
@@ -93,7 +93,7 @@ const site = {
     <footer class="site-footer">
       <div class="wrap">
         <div>
-          <h2>CSV to Calendar</h2>
+          <h2>ICS Editor</h2>
           <p class="muted">{t('footer.claim')}</p>
           <p><a href={LEGAL.repo} rel="noopener">{t('footer.source')}</a></p>
         </div>
@@ -104,6 +104,7 @@ const site = {
         <nav aria-label={t('footer.legal')}>
           <h2>{t('footer.legal')}</h2>
           <ul>
+            <li><a href={path('about', lang)}>{lang === 'de' ? 'Über den ICS Editor' : 'About the ICS Editor'}</a></li>
             <li><a href={path('imprint', lang)}>{lang === 'de' ? 'Impressum' : 'Legal notice'}</a></li>
             <li><a href={path('privacy', lang)}>{lang === 'de' ? 'Datenschutz' : 'Privacy'}</a></li>
             <li><a href={path('terms', lang)}>{lang === 'de' ? 'Nutzungsbedingungen' : 'Terms of use'}</a></li>

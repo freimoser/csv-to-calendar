@@ -21,8 +21,11 @@ export interface Guide {
   faq: Faq[];
   cta: string;
 }
+export interface FigureDef { name: string; de: string; en: string }
 export interface GuideDef {
   type: 'howto' | 'article';
+  /** Bildschirmfotos aus public/img (Name ohne Sprache), mit Bildunterschrift je Sprache */
+  figures: FigureDef[];
   sources: SourceKey[];
   related: string[];
   de: Guide;
@@ -37,6 +40,7 @@ export const GUIDES: Record<string, GuideDef> = {
   // ------------------------------------------------------------------ Datei zu groß
   tooLarge: {
     type: 'howto',
+    figures: [{ name: 'export', de: 'Der ICS Editor teilt eine zu große Datei automatisch in Teile unter 1 MB – mit Zeitraum und Größe je Teil.', en: 'The ICS Editor automatically splits a file that is too large into parts under 1 MB – with date range and size for each part.' }, { name: 'clean', de: 'Verkleinern: Verwaltungsdaten, Beschreibungen oder abgesagte Termine weglassen – die Ersparnis steht direkt daneben.', en: 'Shrinking: leave out housekeeping data, descriptions or cancelled events – the saving is shown right next to each option.' }],
     sources: ['problems', 'import'],
     related: ['limits', 'split', 'importFails', 'undo'],
     de: {
@@ -56,7 +60,8 @@ export const GUIDES: Record<string, GuideDef> = {
       ],
       sections: [
         { h2: 'Was die Meldung „Google Calendar is temporarily unavailable“ bedeutet', html: '<p>Laut Google tritt diese Meldung beim Import meist auf, wenn die Datei zu groß ist. Google Kalender verarbeitet Dateien bis 1 MB. Als Lösung nennt Google, einen kürzeren Zeitraum aus dem ursprünglichen Programm zu exportieren oder die Datei in kleinere Dateien aufzuteilen – wobei Google dafür das Bearbeiten des CSV- oder ICS-Codes von Hand voraussetzt.</p><p>Genau diesen Teil übernimmt das {tool|Werkzeug zum Aufteilen}: Es filtert, teilt und prüft, ohne dass du eine Zeile Code anfassen musst. Welche weiteren Grenzen es gibt, steht in der Übersicht {limits|Google Kalender Limits}.</p>' },
-        { h2: 'CSV-Datei verkleinern: Was wirklich Platz spart', html: '<table><thead><tr><th>Maßnahme</th><th>Wirkung</th></tr></thead><tbody><tr><td>Zeitraum begrenzen (z. B. nur die letzten drei Jahre)</td><td>meist die größte Ersparnis, weil alte Termine wegfallen</td></tr><tr><td>Beschreibungen weglassen</td><td>stark, wenn viele Termine Notizen haben</td></tr><tr><td>Verwaltungsdaten weglassen (Erstellt-/Geändert-Stempel in ICS)</td><td>spart bei Google-Exporten oft ein Fünftel</td></tr><tr><td>Abgesagte und doppelte Termine entfernen</td><td>klein, aber sauberer Kalender</td></tr></tbody></table><p>Reicht das nicht, wird aufgeteilt. Das Werkzeug teilt chronologisch, sodass jeder Teil einen klaren Zeitraum hat.</p>' },
+        { h2: 'CSV-Datei verkleinern: Was wirklich Platz spart', html: '<table><thead><tr><th>Maßnahme</th><th>Wirkung</th></tr></thead><tbody><tr><td>Zeitraum begrenzen (z. B. nur die letzten drei Jahre)</td><td>meist die größte Ersparnis, weil alte Termine wegfallen</td></tr><tr><td>Beschreibungen weglassen</td><td>stark, wenn viele Termine Notizen haben</td></tr><tr><td>Verwaltungsdaten weglassen (Erstellt-/Geändert-Stempel in ICS)</td><td>in unserem Test mit einem echten Google-Export 1,9 von 9,6 MB (rund 20 %)</td></tr><tr><td>Abgesagte und doppelte Termine entfernen</td><td>klein, aber sauberer Kalender</td></tr></tbody></table><p>Reicht das nicht, wird aufgeteilt. Das Werkzeug teilt chronologisch, sodass jeder Teil einen klaren Zeitraum hat.</p>' },
+        { h2: 'Praxisbeispiel: ein echter Google-Export mit 9,6 MB', html: '<p>Getestet haben wir den ICS Editor unter anderem mit dem echten Google-Kalender-Export einer Tierarztpraxis (ausgewertet nur lokal, ohne Namen). Die Zahlen:</p><div class="table-wrap"><table><thead><tr><th>Schritt</th><th>Termine</th><th>Größe</th><th>Dateien für Google</th></tr></thead><tbody><tr><td>Datei unverändert</td><td>rund 27.000</td><td>9,6 MB</td><td>11</td></tr><tr><td>Verwaltungsdaten weggelassen</td><td>rund 27.000</td><td>7,7 MB</td><td>9</td></tr><tr><td>nur 2024–2026</td><td>rund 3.600</td><td>1,5 MB</td><td>2</td></tr><tr><td>nur 2024–2026, ohne Verwaltungsdaten</td><td>rund 3.600</td><td>1,2 MB</td><td>2</td></tr></tbody></table></div><p>Jede der Dateien war kleiner als 950 KB; beim Zurücklesen fehlte kein einziger Termin. Eigener Test, Oktober 2026.</p>' },
         { h2: 'Warum Teile unter 950 KB und nicht genau 1 MB?', html: '<p>„1 MB“ kann 1.000.000 oder 1.048.576 Byte bedeuten. Mit 950.000 Byte bleibt jeder Teil in beiden Fällen sicher darunter. Die angezeigte Größe ist byte-genau die Größe der Datei, die du herunterlädst.</p>' }
       ],
       faq: [
@@ -84,7 +89,8 @@ export const GUIDES: Record<string, GuideDef> = {
       ],
       sections: [
         { h2: 'What “Google Calendar is temporarily unavailable” means', html: '<p>According to Google, this message usually appears when the import file is too large. Google Calendar works with files of 1 MB or smaller. Google suggests exporting a shorter date range from the original application or splitting the file into smaller files – which, in Google’s words, requires manually editing the CSV or ICS code.</p><p>That is exactly the part the {tool|calendar splitting tool} does for you: it filters, splits and checks without you touching any code. For all other limits, see {limits|Google Calendar limits}.</p>' },
-        { h2: 'How to shrink a CSV file: what really saves space', html: '<table><thead><tr><th>Measure</th><th>Effect</th></tr></thead><tbody><tr><td>Limit the date range (e.g. only the last three years)</td><td>usually the biggest saving, because old events disappear</td></tr><tr><td>Leave out descriptions</td><td>large if many events have notes</td></tr><tr><td>Drop housekeeping data (created/modified stamps in ICS)</td><td>often saves about a fifth on Google exports</td></tr><tr><td>Remove cancelled and duplicate events</td><td>small, but a cleaner calendar</td></tr></tbody></table><p>If that isn’t enough, the file is split. The tool splits chronologically, so every part covers a clear date range.</p>' },
+        { h2: 'How to shrink a CSV file: what really saves space', html: '<table><thead><tr><th>Measure</th><th>Effect</th></tr></thead><tbody><tr><td>Limit the date range (e.g. only the last three years)</td><td>usually the biggest saving, because old events disappear</td></tr><tr><td>Leave out descriptions</td><td>large if many events have notes</td></tr><tr><td>Drop housekeeping data (created/modified stamps in ICS)</td><td>in our test with a real Google export, 1.9 of 9.6 MB (about 20%)</td></tr><tr><td>Remove cancelled and duplicate events</td><td>small, but a cleaner calendar</td></tr></tbody></table><p>If that isn’t enough, the file is split. The tool splits chronologically, so every part covers a clear date range.</p>' },
+        { h2: 'Real-world example: a 9.6 MB Google export', html: '<p>Among other files, we tested the ICS Editor with the real Google Calendar export of a veterinary practice (analysed locally only, without names). The numbers:</p><div class="table-wrap"><table><thead><tr><th>Step</th><th>Events</th><th>Size</th><th>Files for Google</th></tr></thead><tbody><tr><td>File unchanged</td><td>about 27,000</td><td>9.6 MB</td><td>11</td></tr><tr><td>Housekeeping data removed</td><td>about 27,000</td><td>7.7 MB</td><td>9</td></tr><tr><td>Only 2024–2026</td><td>about 3,600</td><td>1.5 MB</td><td>2</td></tr><tr><td>Only 2024–2026, no housekeeping data</td><td>about 3,600</td><td>1.2 MB</td><td>2</td></tr></tbody></table></div><p>Every file was smaller than 950 KB; reading them back, not a single event was missing. Own test, October 2026.</p>' },
         { h2: 'Why parts under 950 KB and not exactly 1 MB?', html: '<p>“1 MB” can mean 1,000,000 or 1,048,576 bytes. At 950,000 bytes every part stays safely below either. The size shown is exactly the size of the file you download.</p>' }
       ],
       faq: [
@@ -100,6 +106,7 @@ export const GUIDES: Record<string, GuideDef> = {
   // ------------------------------------------------------------------ Grenzen
   limits: {
     type: 'article',
+    figures: [{ name: 'overview', de: 'Die Übersicht zeigt pro Kalender Termine, Zeitraum, Größe und wie viele Teile für Google nötig sind.', en: 'The overview shows events, date range, size and how many parts Google needs for each calendar.' }],
     sources: ['problems', 'import', 'limits', 'delete'],
     related: ['tooLarge', 'importFails', 'split', 'undo'],
     de: {
@@ -181,6 +188,7 @@ export const GUIDES: Record<string, GuideDef> = {
   // ------------------------------------------------------------------ Import scheitert
   importFails: {
     type: 'howto',
+    figures: [{ name: 'check', de: 'Prüfen: Problemzeilen in einfacher Sprache mit Zeilennummer und Vorschlag zur Korrektur.', en: 'Check: problem rows in plain language with row number and a suggested fix.' }],
     sources: ['import', 'problems'],
     related: ['tooLarge', 'limits', 'convert', 'excel'],
     de: {
@@ -256,6 +264,7 @@ export const GUIDES: Record<string, GuideDef> = {
   // ------------------------------------------------------------------ Aufteilen (Workspace)
   split: {
     type: 'howto',
+    figures: [{ name: 'editor', de: 'Links die Kalender der Datei und erkannte Kürzel, in der Mitte die gefilterten Termine, rechts das Bearbeitungsfeld.', en: 'On the left the calendars in the file and detected initials, in the middle the filtered events, on the right the editor.' }, { name: 'split', de: 'Ein Klick auf „Als eigene Kalender anlegen“ macht aus jedem Kürzel einen Ziel-Kalender – mit Anzahl der Termine.', en: 'One click on “Create as separate calendars” turns each set of initials into a target calendar – with its event count.' }],
     sources: ['import', 'create', 'limits', 'problems'],
     related: ['tooLarge', 'ics', 'limits', 'undo'],
     de: {
@@ -275,6 +284,7 @@ export const GUIDES: Record<string, GuideDef> = {
       ],
       sections: [
         { h2: 'Typischer Fall: vom gemeinsamen Kalender zu eigenen Workspace-Konten', html: '<p>Viele Praxen, Vereine und kleine Firmen haben jahrelang in <em>einem</em> Google Kalender geplant – wer zuständig ist, steht als Kürzel oder Name im Titel. Mit Google Workspace bekommt jede Person ein eigenes Konto. Dann muss der alte Kalender auf die Personen verteilt werden.</p><p>Das Werkzeug sucht in deinem Export automatisch nach Merkmalen, die sich zum Aufteilen eignen: Kürzel aus Großbuchstaben am Titelanfang, wiederkehrende Terminarten, Kategorien und Organisatoren. Es zeigt auch, wie viele Termine gleichzeitig stattfinden – viele parallele Termine sprechen dafür, dass mehrere Personen im selben Kalender planen.</p>' },
+        { h2: 'Praxisbeispiel: 17 Kürzel in einem gemeinsamen Kalender', html: '<p>Im echten Google-Export einer Tierarztpraxis (rund 27.000 Termine, ausgewertet nur lokal) fand der ICS Editor 17 Kürzel aus Großbuchstaben, die zusammen 39 % der Termine abdecken. Ein Klick auf „Als eigene Kalender anlegen“ ergab 18 Ziel-Kalender – einen pro Kürzel und einen für den Rest. Rund 4.000 Termine trugen zwei Kürzel und landeten auf Wunsch in beiden Kalendern. Ob ein Kürzel wirklich eine Person ist, entscheidest du: Das Werkzeug zeigt dir für jedes Kürzel Anzahl und Zeitraum. Eigener Test, Oktober 2026.</p>' },
         { h2: 'Wonach du aufteilen kannst', html: '<div class="table-wrap"><table><thead><tr><th>Merkmal</th><th>Beispiel</th><th>Gut für</th></tr></thead><tbody><tr><td>Kalender in der Datei</td><td>ZIP-Export mit mehreren ICS-Dateien</td><td>Unterkalender einzeln weitergeben</td></tr><tr><td>Kürzel oder Name im Titel</td><td>„T. AK Kontrolle“, „Dr. Müller – Impfung“</td><td>ein Kalender pro Mitarbeiter</td></tr><tr><td>Titelanfang</td><td>„Online …“, „OP …“</td><td>Terminarten trennen</td></tr><tr><td>Kategorie oder Organisator</td><td>Kategorie „Schulung“</td><td>Exporte aus Outlook und anderen Programmen</td></tr><tr><td>Jahr</td><td>2024, 2025, 2026</td><td>Archiv und aktuellen Kalender trennen</td></tr></tbody></table></div>' },
         { h2: 'Worauf du achten solltest', html: '<ul><li><strong>Gäste und Konferenzdaten</strong> übernimmt Google beim Import nicht – Einladungen müssen gegebenenfalls neu verschickt werden.</li><li><strong>Nicht zu viele Kalender auf einmal:</strong> Für Workspace-Konten nennt Google eine Einschränkung, wenn in kurzer Zeit mehr als 60 Kalender angelegt werden.</li><li><strong>Erst in einen neuen Kalender importieren:</strong> So lässt sich ein missglückter Import mit einem Klick löschen – siehe {undo|Import rückgängig machen}.</li><li><strong>Datenschutz:</strong> Stehen Patienten- oder Kundendaten in den Terminen, kannst du Telefonnummern und E-Mail-Adressen vorher ausblenden.</li></ul>' }
       ],
@@ -302,6 +312,7 @@ export const GUIDES: Record<string, GuideDef> = {
       ],
       sections: [
         { h2: 'Typical case: from a shared calendar to individual Workspace accounts', html: '<p>Many practices, clubs and small businesses have planned in <em>one</em> Google Calendar for years – who is responsible is written as initials or a name in the title. With Google Workspace, everyone gets their own account. The old calendar then has to be distributed across those people.</p><p>The tool automatically searches your export for features suitable for splitting: initials in capital letters at the start of titles, recurring event types, categories and organizers. It also shows how many events take place at the same time – many parallel events suggest that several people plan in the same calendar.</p>' },
+        { h2: 'Real-world example: 17 sets of initials in one shared calendar', html: '<p>In the real Google export of a veterinary practice (about 27,000 events, analysed locally only), the ICS Editor found 17 sets of capital-letter initials covering 39% of the events together. One click on “Create as separate calendars” produced 18 target calendars – one per set of initials plus one for the rest. About 4,000 events carried two sets of initials and could go into both calendars. Whether a set of initials really is a person is your call: the tool shows the count and date range for each. Own test, October 2026.</p>' },
         { h2: 'What you can split by', html: '<div class="table-wrap"><table><thead><tr><th>Feature</th><th>Example</th><th>Good for</th></tr></thead><tbody><tr><td>Calendars in the file</td><td>ZIP export with several ICS files</td><td>handing out sub-calendars</td></tr><tr><td>Initials or name in the title</td><td>“T. AK check-up”, “Dr. Miller – vaccination”</td><td>one calendar per employee</td></tr><tr><td>Start of the title</td><td>“Online …”, “Surgery …”</td><td>separating event types</td></tr><tr><td>Category or organizer</td><td>category “Training”</td><td>exports from Outlook and other apps</td></tr><tr><td>Year</td><td>2024, 2025, 2026</td><td>separating archive and current calendar</td></tr></tbody></table></div>' },
         { h2: 'What to watch out for', html: '<ul><li><strong>Guests and conference data</strong> aren’t imported by Google – invitations may need to be sent again.</li><li><strong>Not too many calendars at once:</strong> for Workspace accounts, Google mentions a restriction if more than 60 calendars are created in a short period.</li><li><strong>Import into a new calendar first:</strong> that way a failed import can be deleted in one go – see {undo|undo an import}.</li><li><strong>Privacy:</strong> if events contain patient or customer data, you can hide phone numbers and email addresses beforehand.</li></ul>' }
       ],
@@ -317,6 +328,7 @@ export const GUIDES: Record<string, GuideDef> = {
   // ------------------------------------------------------------------ Excel / Geburtstage
   excel: {
     type: 'howto',
+    figures: [{ name: 'birthdays', de: 'Aus einer Geburtstagsliste werden jährliche, ganztägige Termine – in der Liste mit „Serie“ gekennzeichnet.', en: 'A birthday list becomes yearly all-day events – marked as “Series” in the list.' }],
     sources: ['import', 'problems'],
     related: ['convert', 'importFails', 'ics', 'undo'],
     de: {
@@ -378,6 +390,7 @@ export const GUIDES: Record<string, GuideDef> = {
   // ------------------------------------------------------------------ ICS
   ics: {
     type: 'howto',
+    figures: [{ name: 'editor', de: 'Eine ICS-Datei im ICS Editor: Kalender, Termine und das Bearbeitungsfeld für den gewählten Termin.', en: 'An ICS file in the ICS Editor: calendars, events and the editor for the selected event.' }, { name: 'month', de: 'In der Monatsansicht erscheinen Serientermine an jedem Tag, an dem sie stattfinden.', en: 'In the month view, recurring events appear on every day they occur.' }],
     sources: ['import', 'problems'],
     related: ['tooLarge', 'split', 'convert', 'undo'],
     de: {
@@ -439,6 +452,7 @@ export const GUIDES: Record<string, GuideDef> = {
   // ------------------------------------------------------------------ CSV → ICS
   convert: {
     type: 'howto',
+    figures: [{ name: 'export', de: 'Beim Export wählst du zwischen ICS (mit Serien und Zeitzone) und Google-CSV.', en: 'When exporting you choose between ICS (with recurrence and time zone) and Google CSV.' }, { name: 'privacy', de: 'Vor dem Umwandeln lassen sich Spalten mit Namen, Telefonnummern oder Geburtsdaten weglassen oder kürzen.', en: 'Before converting, columns with names, phone numbers or birth dates can be left out or shortened.' }],
     sources: ['import', 'rfc5545'],
     related: ['excel', 'ics', 'importFails', 'tooLarge'],
     de: {
@@ -457,7 +471,7 @@ export const GUIDES: Record<string, GuideDef> = {
       ],
       sections: [
         { h2: 'Wann ICS besser ist als CSV', html: '<div class="table-wrap"><table><thead><tr><th></th><th>Google-CSV</th><th>ICS</th></tr></thead><tbody><tr><td>Serientermine</td><td>werden zu Einzelterminen</td><td>echte Wiederholung</td></tr><tr><td>Zeitzone</td><td>keine Angabe in der Datei</td><td>wird mitgespeichert</td></tr><tr><td>Andere Programme</td><td>vor allem Google</td><td>Google, Outlook, Apple und viele mehr</td></tr><tr><td>Bearbeiten in Excel</td><td>einfach</td><td>nicht vorgesehen</td></tr></tbody></table></div><p>Für Geburtstage und andere jährliche Termine ist ICS deshalb die richtige Wahl – siehe {excel|Excel-Geburtstagsliste importieren}.</p>' },
-        { h2: 'Ohne Upload umwandeln', html: '<p>Viele Online-Konverter laden deine Datei auf einen Server. Bei Terminlisten mit Namen, Telefonnummern oder Patientendaten ist das heikel. Das Werkzeug arbeitet ausschließlich in deinem Browser; eine Sicherheitsregel verbietet der Seite Verbindungen zu fremden Servern. Erkannte persönliche Daten kannst du vor dem Export weglassen oder kürzen.</p>' }
+        { h2: 'Ohne Upload umwandeln', html: '<p>Ein Konverter, der auf einem Server arbeitet, bekommt deine Datei zwangsläufig zu sehen. Bei Terminlisten mit Namen, Telefonnummern oder Patientendaten ist das heikel. Das Werkzeug arbeitet ausschließlich in deinem Browser; eine Sicherheitsregel verbietet der Seite Verbindungen zu fremden Servern. Erkannte persönliche Daten kannst du vor dem Export weglassen oder kürzen.</p>' }
       ],
       faq: [
         { q: 'Kann ChatGPT eine ICS-Datei erstellen?', a: 'Ja, KI-Chatbots können den Text einer ICS-Datei erzeugen. Prüfe das Ergebnis aber: Der Rahmen muss stimmen (BEGIN:VCALENDAR, VERSION, PRODID, END:VCALENDAR), Google nimmt höchstens 1 MB – und wenn du eine Terminliste mit persönlichen Daten in einen Chat kopierst, verlässt sie dein Gerät. Mit dem Werkzeug wandelst du ohne Upload um.' },
@@ -482,7 +496,7 @@ export const GUIDES: Record<string, GuideDef> = {
       ],
       sections: [
         { h2: 'When ICS beats CSV', html: '<div class="table-wrap"><table><thead><tr><th></th><th>Google CSV</th><th>ICS</th></tr></thead><tbody><tr><td>Recurring events</td><td>become single events</td><td>real recurrence</td></tr><tr><td>Time zone</td><td>not stored in the file</td><td>stored</td></tr><tr><td>Other apps</td><td>mainly Google</td><td>Google, Outlook, Apple and many more</td></tr><tr><td>Editing in Excel</td><td>easy</td><td>not intended</td></tr></tbody></table></div><p>For birthdays and other yearly events, ICS is the right choice – see {excel|Excel to Google Calendar}.</p>' },
-        { h2: 'Convert without uploading', html: '<p>Many online converters upload your file to a server. With event lists containing names, phone numbers or patient data, that’s risky. The tool works exclusively in your browser; a security policy forbids the page to connect to other servers. You can leave out or shorten detected personal data before exporting.</p>' }
+        { h2: 'Convert without uploading', html: '<p>A converter that runs on a server inevitably gets to see your file. With event lists containing names, phone numbers or patient data, that’s risky. The tool works exclusively in your browser; a security policy forbids the page to connect to other servers. You can leave out or shorten detected personal data before exporting.</p>' }
       ],
       faq: [
         { q: 'Can ChatGPT make an ICS file?', a: 'Yes, AI chatbots can generate the text of an ICS file. Check the result, though: the frame must be right (BEGIN:VCALENDAR, VERSION, PRODID, END:VCALENDAR), Google accepts at most 1 MB – and if you paste an event list with personal data into a chat, it leaves your device. With the tool you convert without uploading.' },
@@ -496,6 +510,7 @@ export const GUIDES: Record<string, GuideDef> = {
   // ------------------------------------------------------------------ Rückgängig
   undo: {
     type: 'howto',
+    figures: [{ name: 'export', de: 'Vor jedem Download erinnert der ICS Editor daran, zuerst einen neuen, leeren Kalender anzulegen.', en: 'Before every download, the ICS Editor reminds you to create a new, empty calendar first.' }],
     sources: ['delete', 'create', 'problems'],
     related: ['ics', 'tooLarge', 'split', 'limits'],
     de: {

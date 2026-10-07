@@ -39,7 +39,7 @@ async function og(file, title, claim) {
   const logo = svg.toString().replace('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">', '<svg x="80" y="64" width="64" height="64" viewBox="0 0 48 48">');
   const s = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
 <rect width="1200" height="630" fill="#f4f5f0"/><rect y="590" width="1200" height="40" fill="#0e5a47"/>
-${logo}<text x="164" y="108" font-size="34" font-weight="700" fill="#0e5a47">CSV to Calendar</text>
+${logo}<text x="164" y="108" font-size="34" font-weight="700" fill="#0e5a47">ICS Editor</text>
 ${text}<text x="80" y="550" font-size="30" fill="#4d5751">${esc(claim)}</text></svg>`;
   await sharp(Buffer.from(s)).png({ compressionLevel: 9 }).toFile(fileURLToPath(new URL('og/' + file, pub)));
 }
@@ -48,6 +48,6 @@ for (const lang of ['de', 'en']) {
   await og(`home-${lang}.png`, HOME[lang].h1, claim[lang]);
   for (const [k, g] of Object.entries(GUIDES)) await og(`${k}-${lang}.png`, g[lang].h1, claim[lang]);
 }
-const legal = { imprint: ['Impressum', 'Legal notice'], privacy: ['Datenschutz', 'Privacy policy'], terms: ['Nutzungsbedingungen', 'Terms of use'] };
+const legal = { about: ['Über den ICS Editor', 'About the ICS Editor'], imprint: ['Impressum', 'Legal notice'], privacy: ['Datenschutz', 'Privacy policy'], terms: ['Nutzungsbedingungen', 'Terms of use'] };
 for (const [k, [de, en]] of Object.entries(legal)) { await og(`${k}-de.png`, de, claim.de); await og(`${k}-en.png`, en, claim.en); }
 console.log('Assets erzeugt.');

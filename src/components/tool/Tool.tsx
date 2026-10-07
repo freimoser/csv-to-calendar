@@ -8,7 +8,7 @@ import { todayWall } from '../../lib/datetime';
 import { call, download, latest, warmUp } from './client';
 import { H, HELP, Icon, LangCtx, Status, useT } from './ui';
 import { type Tab } from './Editor';
-import { Studio } from './Studio';
+import { Inspector, Sidebar, StatusBar, StudioCenter, type View } from './Studio';
 import { Export } from './Export';
 
 type Screen = 'start' | 'loading' | 'date' | 'studio' | 'export';
@@ -58,6 +58,8 @@ function App() {
   const [tab, setTab] = useState<Tab>('list');
   const [focus, setFocus] = useState<Focus>(null);
   const [editsVersion, setEditsVersion] = useState(0);
+  const [view, setView] = useState<View>('list');
+  const [active, setActive] = useState<number | null>(null);
   const [simple, setSimple] = useState(true);
   const [drag, setDrag] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -71,9 +73,11 @@ function App() {
     if (idle) idle(() => warmUp()); else setTimeout(warmUp, 1500);
   }, []);
 
-  useEffect(() => { topRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, [screen]);
+  // Datei geladen: Editor füllt den Bildschirm unter der Kopfzeile
   useEffect(() => {
-    document.documentElement.classList.toggle('studio-mode', screen === 'studio' || screen === 'export');
+    const on = screen === 'studio';
+    document.documentElement.classList.toggle('studio-mode', on);
+    if (on || screen === 'date') topRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' });
   }, [screen]);
 
   // Live-Berechnung bei jeder Änderung
@@ -107,6 +111,7 @@ function App() {
     setPlan(null);
     setTab('list');
     setFocus(null);
+    setActive(null);
     setSimple(true);
   }
 
@@ -217,115 +222,125 @@ function App() {
     if (!rest.length) void convertAndShow(roles, opts);
   }
 
-  const stepIdx = screen === 'date' ? 1 : screen === 'studio' ? 2 : screen === 'export' ? 3 : 0;
   const isTable = !!table;
+  const studio = screen === 'studio' && loaded;
+  const fileInput = (
+    <input ref={fileRef} type="file" multiple class="sr-only" tabIndex={-1} aria-hidden="true"
+      accept=".ics,.ical,.ifb,.zip,.csv,.txt,.tsv,.xlsx,.xlsm,.xls,.ods,text/calendar,text/csv"
+      onChange={async (e) => { const input = e.target as HTMLInputElement; await openFiles(input.files); input.value = ''; }} />
+  );
+  const open = () => fileRef.current?.click();
+  const sp = studio ? {
+    loaded: loaded!, table, plan, tab, setTab, sel, setSel, clean, setClean, split, setSplit, roles, setRoles, conv, setConv,
+    onBack: () => setScreen('start'), onNext: () => setTab('export'),
+    focus, setFocus, editsVersion, bumpEdits: () => setEditsVersion((v) => v + 1), view, setView, active, setActive,
+    overview: (
+      <Analysis
+        loaded={loaded!} table={table} plan={plan} birthdays={conv.birthdays} inStudio
+        onOther={() => { setScreen('start'); setLoaded(null); setTable(null); }}
+        onSimple={() => { setSimple(true); setTab('export'); }}
+        onEdit={(tb) => {
+          setTab(tb);
+          if (tb === 'split' && split.mode === 'none' && loaded!.calendars.length > 1) setSplit({ ...split, mode: 'source' });
+        }}
+      />
+    ),
+    exportPanel: (
+      <Export loaded={loaded!} plan={plan} format={format} setFormat={setFormat} isTable={isTable}
+        req={{ selection: sel, clean, split, format }} simple={false} onBack={() => setTab('list')} />
+    )
+  } : null;
 
   return (
-    <div class="tool" ref={topRef}>
-      {stepIdx > 0 && (
-        <ol class="stepper" aria-label={t('steps.label')}>
-          {(['steps.file', 'steps.check', 'steps.download'] as const).map((k, i) => (
-            <li class={i + 1 === stepIdx ? 'active' : i + 1 < stepIdx ? 'done' : ''} aria-current={i + 1 === stepIdx ? 'step' : undefined}>
-              <span class="step-num">{i + 1 < stepIdx ? <Icon name="check" size={18} /> : i + 1}</span>
-              {t(k)}
-            </li>
-          ))}
-        </ol>
-      )}
+    <div class={'app' + (studio ? ' app-loaded' : '')} ref={topRef}
+      onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
+      onDragLeave={(e) => { if (e.currentTarget === e.target) setDrag(false); }}
+      onDrop={(e) => { e.preventDefault(); setDrag(false); void openFiles(e.dataTransfer?.files); }}>
+      {fileInput}
+      <div class="app-toolbar" role="toolbar" aria-label={t('tb.label')}>
+        <button type="button" class="tb-btn" onClick={open}><Icon name="file" size={20} /> {t('tb.open')}</button>
+        <details class="tb-menu">
+          <summary class="tb-btn"><Icon name="calendar" size={20} /> {t('tb.samples')}</summary>
+          <div class="tb-pop">
+            <button type="button" class="tb-item" onClick={(e) => { (e.currentTarget.closest('details') as HTMLDetailsElement).open = false; void sample('practice'); }}>{t('start.samplePractice')}</button>
+            <button type="button" class="tb-item" onClick={(e) => { (e.currentTarget.closest('details') as HTMLDetailsElement).open = false; void sample('csv'); }}>{t('start.sampleCsv')}</button>
+            <button type="button" class="tb-item" onClick={(e) => { (e.currentTarget.closest('details') as HTMLDetailsElement).open = false; void sample('birthdays'); }}>{t('start.sampleBirthdays')}</button>
+            <hr />
+            <button type="button" class="tb-item" onClick={templateCsv}><Icon name="download" size={18} /> {t('start.tplCsv')}</button>
+            <button type="button" class="tb-item" onClick={templateBirthdays}><Icon name="download" size={18} /> {t('start.tplBirthdays')}</button>
+          </div>
+        </details>
+        <div class="tb-file break" title={loaded?.fileName ?? ''}>
+          {studio ? <><strong>{loaded!.fileName}</strong><span class="muted small"> · {sourceTextOf(loaded!, table, t, n, b)}</span></> : <span class="muted">{t('tb.noFile')}</span>}
+        </div>
+        <button type="button" class="btn btn-primary tb-export" disabled={!studio || !plan || plan.events === 0} onClick={() => { setSimple(false); setTab('export'); }}>
+          <Icon name="download" size={20} /> {t('st.export')}
+        </button>
+      </div>
 
-      {(screen === 'start' || screen === 'loading') && (
-        <div class="start-grid">
-          <div class="start-main">
-            <div
-              class={'dropzone' + (drag ? ' drag' : '')}
-              onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
-              onDragLeave={() => setDrag(false)}
-              onDrop={(e) => { e.preventDefault(); setDrag(false); void openFiles(e.dataTransfer?.files); }}
-            >
-              {screen === 'loading' ? (
-                <div class="loading" role="status" aria-live="polite"><span class="spinner" aria-hidden="true" />{t('start.loading')}</div>
-              ) : (
-                <>
-                  <Icon name="file" size={56} class="accent" />
-                  <div class="drop-title">{t('start.drop')}</div>
-                  <div class="muted">{t('start.or')}</div>
-                  <button type="button" class="btn btn-primary btn-xl" onClick={() => fileRef.current?.click()}>{t('start.choose')}</button>
-                  <input ref={fileRef} type="file" multiple class="sr-only" tabIndex={-1} aria-hidden="true"
-                    accept=".ics,.ical,.ifb,.zip,.csv,.txt,.tsv,.xlsx,.xlsm,.xls,.ods,text/calendar,text/csv"
-                    onChange={async (e) => { const input = e.target as HTMLInputElement; await openFiles(input.files); input.value = ''; }} />
-                  <div class="muted small">{t('start.types')}</div>
-                </>
-              )}
+      <div class={'app-body' + (drag ? ' drag' : '')}>
+        <aside class="app-side" aria-label={t('st.calendars')}>
+          {studio ? <Sidebar {...sp!} /> : (
+            <div class="side-block">
+              <h2 class="side-title">{t('st.calendars')}</h2>
+              <p class="muted small m0">{t('app.sideEmpty')}</p>
             </div>
-            {error && <div class="status status-bad" role="alert"><Icon name="bad" size={28} /><div>{error}</div></div>}
-            <div class="privacy-badge">
-              <Icon name="lock" size={34} class="accent" />
-              <div>
-                <div class="privacy-title">{t('start.privTitle')}</div>
-                <div>{t('start.privText')}</div>
-                <div class="muted small">{t('start.privTry')}</div>
+          )}
+        </aside>
+
+        <section class="app-center" aria-label={t('app.center')}>
+          {(screen === 'start' || screen === 'loading') && (
+            <div class="app-start">
+              <div class={'dropzone' + (drag ? ' drag' : '')}>
+                {screen === 'loading' ? (
+                  <div class="loading" role="status" aria-live="polite"><span class="spinner" aria-hidden="true" />{t('start.loading')}</div>
+                ) : (
+                  <>
+                    <Icon name="file" size={52} class="accent" />
+                    <div class="drop-title">{t('start.drop')}</div>
+                    <div class="muted">{t('start.or')}</div>
+                    <button type="button" class="btn btn-primary btn-xl" onClick={open}>{t('start.choose')}</button>
+                    <div class="muted small">{t('start.types')}</div>
+                  </>
+                )}
+              </div>
+              {error && <div class="status status-bad" role="alert"><Icon name="bad" size={28} /><div>{error}</div></div>}
+              <div class="privacy-badge">
+                <Icon name="lock" size={30} class="accent" />
+                <div>
+                  <div class="privacy-title">{t('start.privTitle')}</div>
+                  <div>{t('start.privText')}</div>
+                  <div class="muted small">{t('start.privTry')}</div>
+                </div>
+              </div>
+              <div class="samples">
+                <span class="muted">{t('start.samples')}</span>
+                <button type="button" class="btn btn-secondary" onClick={() => sample('practice')}>{t('start.samplePractice')}</button>
+                <button type="button" class="btn btn-secondary" onClick={() => sample('csv')}>{t('start.sampleCsv')}</button>
+                <button type="button" class="btn btn-secondary" onClick={() => sample('birthdays')}>{t('start.sampleBirthdays')}</button>
               </div>
             </div>
-            <div class="samples">
-              <span class="muted">{t('start.samples')}</span>
-              <button type="button" class="btn btn-secondary" onClick={() => sample('practice')}>{t('start.samplePractice')}</button>
-              <button type="button" class="btn btn-secondary" onClick={() => sample('csv')}>{t('start.sampleCsv')}</button>
-              <button type="button" class="btn btn-secondary" onClick={() => sample('birthdays')}>{t('start.sampleBirthdays')}</button>
-            </div>
-          </div>
-          <aside class="start-side">
-            <div class="card">
-              <h2 class="h3">{t('start.steps')}</h2>
-              <ol class="steps-list">
+          )}
+          {screen === 'date' && table && askCols.length > 0 && <DateQuestion table={table} col={askCols[0]} onAnswer={answerDate} />}
+          {studio && <StudioCenter {...sp!} />}
+        </section>
+
+        <aside class={'app-inspector' + (studio && active !== null ? ' has-event' : '')} aria-label={t('in.title')}>
+          {studio && active !== null ? <Inspector p={sp!} id={active} /> : studio ? (
+            <div class="inspector-hint"><Icon name="info" size={22} class="accent" /><p class="m0">{t('in.pick')}</p></div>
+          ) : (
+            <div class="side-block">
+              <h2 class="side-title">{t('start.steps')}</h2>
+              <ol class="steps-list small">
                 <H as="li" k="start.step1" />
                 <H as="li" k="start.step2" />
                 <H as="li" k="start.step3" />
               </ol>
             </div>
-            <div class="card">
-              <h2 class="h3">{t('start.templates')}</h2>
-              <ul class="plain">
-                <li><button type="button" class="link" onClick={templateCsv}><Icon name="download" size={20} />{t('start.tplCsv')}</button></li>
-                <li><button type="button" class="link" onClick={templateBirthdays}><Icon name="download" size={20} />{t('start.tplBirthdays')}</button></li>
-              </ul>
-            </div>
-          </aside>
-        </div>
-      )}
-
-      {screen === 'date' && table && askCols.length > 0 && <DateQuestion table={table} col={askCols[0]} onAnswer={answerDate} />}
-
-      {screen === 'studio' && loaded && (
-        <Studio
-          loaded={loaded} table={table} plan={plan} tab={tab} setTab={setTab}
-          sel={sel} setSel={setSel} clean={clean} setClean={setClean} split={split} setSplit={setSplit}
-          roles={roles} setRoles={setRoles} conv={conv} setConv={setConv}
-          onBack={() => setScreen('start')} onNext={() => setScreen('export')}
-          focus={focus} setFocus={setFocus} editsVersion={editsVersion} bumpEdits={() => setEditsVersion((v) => v + 1)}
-          sourceText={sourceTextOf(loaded, table, t, n, b)}
-          onExport={() => { setSimple(false); setScreen('export'); }}
-          onOther={() => { setScreen('start'); setLoaded(null); setTable(null); }}
-          overview={
-            <Analysis
-              loaded={loaded} table={table} plan={plan} birthdays={conv.birthdays} inStudio
-              onOther={() => { setScreen('start'); setLoaded(null); setTable(null); }}
-              onSimple={() => { setSimple(true); setScreen('export'); }}
-              onEdit={(tb) => {
-                setTab(tb);
-                if (tb === 'split' && split.mode === 'none' && loaded.calendars.length > 1) setSplit({ ...split, mode: 'source' });
-              }}
-            />
-          }
-        />
-      )}
-
-      {screen === 'export' && loaded && (
-        <Export
-          loaded={loaded} plan={plan} format={format} setFormat={setFormat} isTable={isTable}
-          req={{ selection: sel, clean, split, format }} simple={simple}
-          onBack={() => { setSimple(false); setScreen('studio'); }}
-        />
-      )}
+          )}
+        </aside>
+      </div>
+      <StatusBar loaded={studio ? loaded : null} plan={studio ? plan : null} />
     </div>
   );
 }

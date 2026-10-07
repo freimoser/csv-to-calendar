@@ -1,15 +1,15 @@
 {
-  "name": "CSV to Calendar",
-  "short_name": "CSV to Calendar",
-  "description": "CSV, Excel und ICS für Google Kalender vorbereiten – ohne Upload.",
-  "start_url": "/csv-to-calendar/",
-  "scope": "/csv-to-calendar/",
+  "name": "ICS Editor",
+  "short_name": "ICS Editor",
+  "description": "ICS-Dateien und Google-Kalender-Exporte im Browser bearbeiten, aufteilen und konvertieren – ohne Upload.",
+  "start_url": "/ics-editor/",
+  "scope": "/ics-editor/",
   "display": "standalone",
   "background_color": "#f4f5f0",
   "theme_color": "#0e5a47",
   "icons": [
-    { "src": "/csv-to-calendar/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/csv-to-calendar/icon-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "/csv-to-calendar/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "/ics-editor/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/ics-editor/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/ics-editor/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }

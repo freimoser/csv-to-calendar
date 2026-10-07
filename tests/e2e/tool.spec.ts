@@ -79,6 +79,7 @@ test('Studio: Kürzel filtern, Termin bearbeiten, verschieben, Bearbeitung lande
   await expect(page.getByRole('heading', { name: /Kalender in der Datei/ })).toBeVisible({ timeout: 30_000 });
   await page.locator('.side-group .side-item').first().click();
   await expect(page.locator('.chip')).toContainText('Gefiltert');
+  await page.waitForTimeout(600); // gefilterte Liste lädt (Entprellung 120 ms)
   await page.locator('.row-open').first().click();
   const title = page.getByRole('textbox', { name: 'Titel' });
   const oldTitle = await title.inputValue();
@@ -139,7 +140,7 @@ test('CSV: Semikolon, Windows-Zeichensatz, Datenschutz und zeilengenaue Fehler',
   await expect(page.getByText(/Semikolon als Trennzeichen/)).toBeVisible({ timeout: 30_000 });
   await page.getByRole('tab', { name: 'Persönliche Daten' }).click();
   await expect(page.getByRole('heading', { name: 'Spalte „Patient“' })).toBeVisible();
-  const csvSize = page.locator('.studio-summary');
+  const csvSize = page.locator('.app-status');
   const before = await csvSize.textContent();
   await page.getByRole('radiogroup', { name: 'Spalte „Patient“' }).getByRole('radio', { name: 'Weglassen' }).click();
   await expect(csvSize).not.toHaveText(before!, { timeout: 10_000 });
@@ -173,7 +174,7 @@ test('Bedienung mit der Tastatur', async ({ page }) => {
   await page.goto('');
   // Sprunglink, Logo, Navigation … bis zum Dateiknopf
   let found = false;
-  for (let i = 0; i < 15 && !found; i++) {
+  for (let i = 0; i < 25 && !found; i++) {
     await page.keyboard.press('Tab');
     found = (await page.evaluate(() => document.activeElement?.textContent?.trim())) === 'Datei auswählen';
   }
@@ -207,7 +208,7 @@ test('Offline nach dem ersten Besuch', async ({ page, context }) => {
 
 test('Englische Startseite und Sprachwechsel', async ({ page }) => {
   await page.goto('en/');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText(/CSV to Calendar/);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(/ICS Editor/);
   await page.getByRole('link', { name: 'Deutsch' }).click();
-  await expect(page).toHaveURL(/\/csv-to-calendar\/$/);
+  await expect(page).toHaveURL(/\/ics-editor\/$/);
 });

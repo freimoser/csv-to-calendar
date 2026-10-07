@@ -12,7 +12,7 @@ const read = (p) => (existsSync(dist + p) ? readFileSync(dist + p, 'utf8') : '')
 for (const p of ['impressum/index.html', 'datenschutz/index.html', 'en/legal-notice/index.html', 'en/privacy/index.html']) if (!read(p)) blocker.push(`Pflichtseite fehlt: ${p}`);
 const imprint = read('impressum/index.html');
 if (/ANSCHRIFT FEHLT|TODO|class="placeholder"/.test(imprint)) blocker.push('Impressum: ladungsfähige Anschrift fehlt (§ 5 DDG). In src/config/legal.ts street und zip eintragen.');
-if (!/kontakt \[at\] freimoser\.de|@/.test(imprint)) blocker.push('Impressum: Kontaktmöglichkeit fehlt.');
+if (!/\[at\]|@/.test(imprint)) blocker.push('Impressum: Kontaktmöglichkeit fehlt.');
 const start = read('index.html');
 const canonical = (/<link rel="canonical" href="([^"]+)"/.exec(start) || [])[1] || '';
 if (!canonical) blocker.push('Startseite hat kein Canonical.');

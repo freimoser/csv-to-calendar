@@ -17,6 +17,7 @@ playwright-report/
 *.xls
 *.txt
 !public/llms.txt
+!src/pages/*.txt.ts
 private-samples/
 tests/.generated/
 

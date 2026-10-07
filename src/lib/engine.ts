@@ -14,6 +14,7 @@ import { buildCsv, csvSizes, packCsv, templateCsv, type CsvPart } from './google
 import { fromRows, parseCsvText, tableToCalendar, type Column, type ConvertOptions, type RowIssue, type Table } from './table';
 import { wallParts } from './datetime';
 import { applyPatch, type Patch } from './edit';
+import { occurrences } from './recur';
 import { eventFromLines, timezoneId } from './ics';
 import { vtimezone, EXPORT_TIMEZONES } from './tz';
 import type { Rule } from './plan';
@@ -71,6 +72,9 @@ export interface EventDetail {
   start: number | null; end: number | null; allDay: boolean; tz: string; rrule: string | null; recurrenceId: string | null;
   status: string; uid: string; lines: string[]; edited: boolean; attendees: number; alarms: number;
 }
+
+export interface MonthItem { id: number; start: number; allDay: boolean; summary: string; series: boolean; edited: boolean }
+export interface MonthResult { year: number; month: number; days: { day: number; items: MonthItem[]; more: number }[]; total: number }
 
 export type Focus = { kind: 'cal'; cal: number } | { kind: 'rule'; rule: Rule; label: string } | { kind: 'target'; key: string; label: string } | null;
 
@@ -307,7 +311,7 @@ export function build(req: PlanRequest, which: { cal: string; part: number } | '
 }
 
 /** Termine für den Editor: Suche, Fokus auf Kalender/Regel/Ziel, mit Ziel-Kalendern je Termin. */
-export function listEvents(req: PlanRequest, query: string, focus: Focus, offset = 0, limit = 100): { rows: EventRow[]; total: number } {
+export function listEvents(req: PlanRequest, query: string, focus: Focus, offset = 0, limit = 100, order: 'asc' | 'desc' = 'desc'): { rows: EventRow[]; total: number } {
   const deleted = new Set(req.selection.deleted);
   const sel = select(S.groups, { ...req.selection, deleted: [] });
   const { buckets } = assign(sel.groups, req.split, S.cals);
@@ -327,9 +331,11 @@ export function listEvents(req: PlanRequest, query: string, focus: Focus, offset
   const q = query.trim().toLowerCase();
   const rows: EventRow[] = [];
   let total = 0;
-  for (const g of sel.groups) {
+  // Neueste zuerst: Gruppen nach ihrem letzten Einzeltermin bzw. Serienbeginn sortieren
+  const groups = order === 'asc' ? sel.groups : [...sel.groups].sort((a, b) => (b.series ? b.first : b.last) - (a.series ? a.first : a.last));
+  for (const g of groups) {
     if (!inFocus(g)) continue;
-    for (const e of g.events) {
+    for (const e of order === 'asc' ? g.events : [...g.events].reverse()) {
       if (q && !e.summary.toLowerCase().includes(q) && !e.description.toLowerCase().includes(q) && !e.location.toLowerCase().includes(q)) continue;
       total++;
       if (total > offset && rows.length < limit) rows.push({
@@ -341,6 +347,47 @@ export function listEvents(req: PlanRequest, query: string, focus: Focus, offset
     }
   }
   return { rows, total };
+}
+
+/** Termine eines Monats für die Kalenderansicht – Serien werden dafür ausgerollt. */
+export function monthEvents(req: PlanRequest, query: string, focus: Focus, year: number, month: number, perDay = 4): MonthResult {
+  const from = Date.UTC(year, month, 1), to = Date.UTC(year, month + 1, 1) - 1;
+  const sel = select(S.groups, req.selection);
+  const { buckets } = focus && focus.kind === 'target' ? assign(sel.groups, req.split, S.cals) : { buckets: [] as { key: string; groups: Group[] }[] };
+  const target = focus && focus.kind === 'target' ? new Set(buckets.find((b) => b.key === focus.key)?.groups ?? []) : null;
+  const q = query.trim().toLowerCase();
+  const byDay = new Map<number, MonthItem[]>();
+  let total = 0;
+  const add = (e: IcsEvent, w: number) => {
+    const d = new Date(w).getUTCDate();
+    const list = byDay.get(d) ?? [];
+    list.push({ id: e.id, start: w, allDay: !!e.start?.allDay, summary: e.summary.slice(0, 80), series: !!e.rrule, edited: S.edits.has(editKey(e)) });
+    byDay.set(d, list);
+    total++;
+  };
+  for (const g of sel.groups) {
+    if (focus?.kind === 'cal' && g.cal !== focus.cal) continue;
+    if (focus?.kind === 'rule' && !ruleMatches(g.master, focus.rule)) continue;
+    if (target && !target.has(g)) continue;
+    if (g.last < from || g.first > to) continue;
+    const overridden = new Set(g.events.filter((e) => e.recurrenceId).map((e) => e.recurrenceId!.slice(0, 8)));
+    for (const e of g.events) {
+      if (!e.start) continue;
+      if (q && !e.summary.toLowerCase().includes(q)) continue;
+      if (e.rrule && !e.recurrenceId) {
+        for (const w of occurrences(e, from, to)) {
+          const dt = new Date(w);
+          const key = `${dt.getUTCFullYear()}${String(dt.getUTCMonth() + 1).padStart(2, '0')}${String(dt.getUTCDate()).padStart(2, '0')}`;
+          if (!overridden.has(key)) add(e, w);
+        }
+      } else if (e.start.wall >= from && e.start.wall <= to) add(e, e.start.wall);
+    }
+  }
+  const days = [...byDay.entries()].sort((a, b) => a[0] - b[0]).map(([day, items]) => {
+    items.sort((a, b) => (a.allDay === b.allDay ? a.start - b.start : a.allDay ? -1 : 1));
+    return { day, items: items.slice(0, perDay), more: Math.max(0, items.length - perDay) };
+  });
+  return { year, month, days, total };
 }
 
 export function template(): BuiltFile {
@@ -359,8 +406,9 @@ export type Request =
   | { type: 'convert'; roles: Record<number, Column['role']>; options: ConvertOptions }
   | { type: 'plan'; req: PlanRequest }
   | { type: 'build'; req: PlanRequest; which: { cal: string; part: number } | 'zip'; salt: string }
-  | { type: 'list'; req: PlanRequest; query: string; focus: Focus; offset: number; limit: number }
+  | { type: 'list'; req: PlanRequest; query: string; focus: Focus; offset: number; limit: number; order?: 'asc' | 'desc' }
   | { type: 'get'; id: number }
+  | { type: 'month'; req: PlanRequest; query: string; focus: Focus; year: number; month: number }
   | { type: 'edit'; id: number; patch: Patch | null }
   | { type: 'template' }
   | { type: 'sample'; which: 'practice' | 'csv' | 'birthdays'; lang: 'de' | 'en' };
@@ -374,8 +422,9 @@ export function handle(msg: Request): unknown {
     case 'convert': return convertTable(msg.roles, msg.options);
     case 'plan': return plan(msg.req);
     case 'build': return build(msg.req, msg.which, msg.salt);
-    case 'list': return listEvents(msg.req, msg.query, msg.focus, msg.offset, msg.limit);
+    case 'list': return listEvents(msg.req, msg.query, msg.focus, msg.offset, msg.limit, msg.order);
     case 'get': return getEvent(msg.id);
+    case 'month': return monthEvents(msg.req, msg.query, msg.focus, msg.year, msg.month);
     case 'edit': return editEvent(msg.id, msg.patch);
     case 'template': return template();
     case 'sample': {

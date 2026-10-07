@@ -25,8 +25,8 @@ const ossList = () => '<ul>' + OSS.map(([n, l, u]) => `<li><a href="${u}" rel="n
 export const LEGAL_PAGES: Record<'imprint' | 'privacy' | 'terms', Record<Lang, LegalDoc>> = {
   imprint: {
     de: {
-      title: 'Impressum – CSV to Calendar',
-      description: 'Impressum von CSV to Calendar nach § 5 DDG.',
+      title: 'Impressum – ICS Editor',
+      description: 'Impressum von ICS Editor nach § 5 DDG.',
       h1: 'Impressum',
       html: `
 <h2>Angaben gemäß § 5 DDG</h2>
@@ -41,8 +41,8 @@ export const LEGAL_PAGES: Record<'imprint' | 'privacy' | 'terms', Record<Lang, L
 <p>Hinweise zur Haftung für Inhalte und Links sowie zum Urheberrecht stehen in den <a href="../nutzungsbedingungen/">Nutzungsbedingungen</a>.</p>`
     },
     en: {
-      title: 'Legal notice – CSV to Calendar',
-      description: 'Legal notice (Impressum) of CSV to Calendar according to § 5 DDG.',
+      title: 'Legal notice – ICS Editor',
+      description: 'Legal notice (Impressum) of ICS Editor according to § 5 DDG.',
       h1: 'Legal notice',
       html: `
 <p class="muted">This page is a translation of the German Impressum required by § 5 DDG (German Digital Services Act).</p>
@@ -60,7 +60,7 @@ export const LEGAL_PAGES: Record<'imprint' | 'privacy' | 'terms', Record<Lang, L
   },
   privacy: {
     de: {
-      title: 'Datenschutz – CSV to Calendar',
+      title: 'Datenschutz – ICS Editor',
       description: 'Datenschutzerklärung: Deine Dateien verlassen dein Gerät nicht. Keine Cookies, kein Tracking. Nur GitHub verarbeitet als Hoster Zugriffsdaten.',
       h1: 'Datenschutzerklärung',
       html: `
@@ -89,7 +89,7 @@ export const LEGAL_PAGES: Record<'imprint' | 'privacy' | 'terms', Record<Lang, L
 <p class="muted">Stand: 7. Oktober 2026</p>`
     },
     en: {
-      title: 'Privacy – CSV to Calendar',
+      title: 'Privacy – ICS Editor',
       description: 'Privacy policy: your files never leave your device. No cookies, no tracking. Only GitHub, as host, processes access data.',
       h1: 'Privacy policy',
       html: `
@@ -120,12 +120,12 @@ export const LEGAL_PAGES: Record<'imprint' | 'privacy' | 'terms', Record<Lang, L
   },
   terms: {
     de: {
-      title: 'Nutzungsbedingungen – CSV to Calendar',
-      description: 'Nutzungsbedingungen und Haftungshinweise für das kostenlose Werkzeug CSV to Calendar.',
+      title: 'Nutzungsbedingungen – ICS Editor',
+      description: 'Nutzungsbedingungen und Haftungshinweise für das kostenlose Werkzeug ICS Editor.',
       h1: 'Nutzungsbedingungen und Haftung',
       html: `
 <h2>1. Kostenlos und ohne Anmeldung</h2>
-<p>CSV to Calendar ist ein kostenloses Werkzeug. Es gibt keine Anmeldung, keinen Kauf und kein Abonnement. Weil dabei kein Vertrag mit Leistungspflichten entsteht, gibt es keine Allgemeinen Geschäftsbedingungen – diese Seite fasst zusammen, was du wissen solltest.</p>
+<p>ICS Editor ist ein kostenloses Werkzeug. Es gibt keine Anmeldung, keinen Kauf und kein Abonnement. Weil dabei kein Vertrag mit Leistungspflichten entsteht, gibt es keine Allgemeinen Geschäftsbedingungen – diese Seite fasst zusammen, was du wissen solltest.</p>
 <h2>2. Ergebnisse prüfen</h2>
 <p>Das Werkzeug wurde sorgfältig entwickelt und automatisch getestet. Trotzdem kann ich nicht garantieren, dass jede Datei fehlerfrei umgewandelt wird. Prüfe das Ergebnis bitte, bevor du dich darauf verlässt. Importiere am besten zuerst in einen neuen, leeren Kalender – den kannst du bei Bedarf komplett löschen.</p>
 <h2>3. Deine Verantwortung für die Daten</h2>
@@ -141,12 +141,12 @@ export const LEGAL_PAGES: Record<'imprint' | 'privacy' | 'terms', Record<Lang, L
 ${ossList()}`
     },
     en: {
-      title: 'Terms of use – CSV to Calendar',
-      description: 'Terms of use and liability notes for the free tool CSV to Calendar.',
+      title: 'Terms of use – ICS Editor',
+      description: 'Terms of use and liability notes for the free tool ICS Editor.',
       h1: 'Terms of use and liability',
       html: `
 <h2>1. Free and without sign-up</h2>
-<p>CSV to Calendar is a free tool. There is no sign-up, no purchase and no subscription. Since no contract with performance obligations is formed, there are no general terms and conditions – this page summarises what you should know.</p>
+<p>ICS Editor is a free tool. There is no sign-up, no purchase and no subscription. Since no contract with performance obligations is formed, there are no general terms and conditions – this page summarises what you should know.</p>
 <h2>2. Check the results</h2>
 <p>The tool has been developed carefully and is tested automatically. Still, I can’t guarantee that every file will be converted without errors. Please check the result before relying on it. Ideally, import into a new, empty calendar first – you can delete it completely if needed.</p>
 <h2>3. Your responsibility for the data</h2>

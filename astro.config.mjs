@@ -5,10 +5,10 @@ import preact from '@astrojs/preact';
 // lesen sie aus dem Seitenkontext). Für lokale Messungen kann LOCAL_ROBOTS=http://localhost:4321/robots.txt gesetzt werden.
 const ROBOTS = ['https://freimoser.github.io/robots.txt', process.env.LOCAL_ROBOTS].filter(Boolean).join(' ');
 
-// GitHub Pages: https://freimoser.github.io/csv-to-calendar/
+// GitHub Pages: https://freimoser.github.io/ics-editor/
 export default defineConfig({
   site: 'https://freimoser.github.io',
-  base: '/csv-to-calendar/',
+  base: '/ics-editor/',
   trailingSlash: 'always',
   build: { format: 'directory', inlineStylesheets: 'always' },
   integrations: [preact()],

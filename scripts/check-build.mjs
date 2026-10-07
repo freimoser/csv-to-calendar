@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 const dist = fileURLToPath(new URL('../dist/', import.meta.url));
 const SITE = 'https://freimoser.github.io';
-const BASE = '/csv-to-calendar/';
+const BASE = '/ics-editor/';
 const VERIFY = '<meta name="google-site-verification" content="6pYvtFCnU7UFcQFajtMSkQ7tYMy3Z_Bt7teKiT5yKNg">';
 const errors = [];
 const warn = [];
