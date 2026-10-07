@@ -20,6 +20,17 @@ async function upload(page: Page, name: string, data: Uint8Array | string, mime:
 
 test.describe('360 px Breite', () => {
   test.use({ viewport: { width: 360, height: 780 } });
+  test('Studio am Handy: Termin antippen zeigt das Bearbeitungsfeld sofort', async ({ page }) => {
+    await page.goto('');
+    await ready(page);
+    await page.getByRole('button', { name: /Praxis-Kalender/ }).click();
+    await expect(page.getByRole('heading', { name: /Kalender in der Datei/ })).toBeVisible({ timeout: 30_000 });
+    await page.locator('.row-open').nth(5).click();
+    await expect(page.getByRole('heading', { name: 'Termin bearbeiten' })).toBeInViewport({ timeout: 5_000 });
+    await page.getByRole('textbox', { name: 'Titel' }).press('Escape');
+    await expect(page.getByRole('heading', { name: 'Termin bearbeiten' })).toHaveCount(0);
+    await noHorizontalScroll(page);
+  });
   for (const p of PAGES) {
     test(`kein seitliches Scrollen: /${p}`, async ({ page }) => {
       await page.goto(p);

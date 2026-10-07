@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'preact/hooks';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
 import type { EventDetail, EventRow, Focus, Loaded, PlanResult } from '../../lib/engine';
 import type { Rule, Target, TextField } from '../../lib/plan';
@@ -22,6 +22,10 @@ export interface StudioProps extends EditorProps {
 
 let tid = 0;
 const newId = () => 'm' + Date.now().toString(36) + (++tid);
+/** Schmale Bildschirme: Seitenleiste, Liste und Bearbeitungsfeld stehen untereinander. */
+const narrow = () => typeof window !== 'undefined' && window.matchMedia('(max-width: 999px)').matches;
+const scrollTo = (sel: string) => { if (narrow()) requestAnimationFrame(() => document.querySelector(sel)?.scrollIntoView({ block: 'start', behavior: 'smooth' })); };
+
 const hm = (w: number | null) => { if (w === null) return ''; const p = wallParts(w); return `${String(p.h).padStart(2, '0')}:${String(p.mi).padStart(2, '0')}`; };
 
 export function Studio(p: StudioProps) {
@@ -91,7 +95,7 @@ export function Studio(p: StudioProps) {
 function Sidebar(p: StudioProps) {
   const { t, n, y } = useT();
   const { loaded, plan, split, focus } = p;
-  const go = (f: Focus) => { p.setFocus(f); p.setTab('list'); };
+  const go = (f: Focus) => { p.setFocus(f); p.setTab('list'); scrollTo('.studio-main'); };
   const isFocus = (f: Focus) => JSON.stringify(f) === JSON.stringify(focus);
   const groups: { kind: string; label: UiKey; field: TextField; op: Rule['op'] }[] = [
     { kind: 'initials', label: 'st.initials', field: 'summary', op: 'word' },
@@ -262,12 +266,12 @@ function EventBrowser(p: StudioProps) {
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr class={(active === r.id ? 'active ' : '') + (isDeleted(r) ? 'dim' : '')} aria-selected={active === r.id}>
+                <tr data-row={r.id} class={(active === r.id ? 'active ' : '') + (isDeleted(r) ? 'dim' : '')} aria-selected={active === r.id}>
                   <td><input type="checkbox" aria-label={t('ev.select')} checked={checked.has(r.id)} onChange={() => toggle(r.id)} /></td>
                   <td class="nowrap">{d(r.start)}</td>
                   <td class="nowrap muted">{r.allDay ? '' : hm(r.start)}</td>
                   <td class="break">
-                    <button type="button" class="row-open" aria-label={t('ev.open', { t: r.summary.slice(0, 60) })} onClick={() => setActive(r.id)}>{r.summary || '–'}</button>
+                    <button type="button" class="row-open" aria-label={t('ev.open', { t: r.summary.slice(0, 60) })} onClick={() => { setActive(r.id); scrollTo('.browser-inspector'); }}>{r.summary || '–'}</button>
                     {r.series && <span class="pill">{t('ev.series')}</span>}
                     {r.edited && <span class="pill pill-edit">{t('ev.edited')}</span>}
                     {isDeleted(r) && <span class="pill pill-del">{t('ev.deletedPill')}</span>}
@@ -285,8 +289,8 @@ function EventBrowser(p: StudioProps) {
       </div>
       <div class="browser-inspector">
         {active === null
-          ? <p class="muted card">{t('in.pick')}</p>
-          : <Inspector id={active} onClose={() => setActive(null)} onChanged={p.bumpEdits} deleted={rows.find((r) => r.id === active) ? isDeleted(rows.find((r) => r.id === active)!) : false}
+          ? <p class="muted card pick-hint">{t('in.pick')}</p>
+          : <Inspector id={active} onClose={() => { const id = active; setActive(null); if (narrow()) requestAnimationFrame(() => document.querySelector(`[data-row="${id}"]`)?.scrollIntoView({ block: 'center' })); }} onChanged={p.bumpEdits} deleted={rows.find((r) => r.id === active) ? isDeleted(rows.find((r) => r.id === active)!) : false}
               onDelete={(on) => { const r = rows.find((x) => x.id === active); if (r) setDeleted([r], on); }} />}
       </div>
     </div>
@@ -325,7 +329,7 @@ function Inspector({ id, onClose, onChanged, deleted, onDelete }: { id: number; 
     if (x) { setDt(x); fill(x); setSaved(false); onChanged(); }
   }
   return (
-    <div class="card inspector">
+    <div class="card inspector" onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}>
       <div class="head-row">
         <h3 class="h3">{t('in.title')}</h3>
         <button type="button" class="icon-btn" aria-label={t('in.close')} onClick={onClose}>×</button>
