@@ -29,8 +29,9 @@ export interface GuideDef {
   en: Guide;
 }
 
-const PHONE_FAQ_DE: Faq = { q: 'Kann ich die Datei am Handy importieren?', a: 'Nein. Google Kalender erlaubt den Import nur am Computer, nicht am Handy oder Tablet. Vorbereiten kannst du die Datei mit dem Werkzeug aber auch am Handy.' };
-const PHONE_FAQ_EN: Faq = { q: 'Can I import the file on my phone?', a: 'No. Google Calendar only lets you import on a computer, not on a phone or tablet. You can still prepare the file with the tool on your phone.' };
+/** Steht sichtbar auf der Startseite und im Import-Ratgeber; als FAQPage-Markup nur auf der Startseite (Google: wiederholte FAQs nur einmal auszeichnen). */
+export const PHONE_FAQ_DE: Faq = { q: 'Kann ich die Datei am Handy importieren?', a: 'Nein. Google Kalender erlaubt den Import nur am Computer, nicht am Handy oder Tablet. Vorbereiten kannst du die Datei mit dem Werkzeug aber auch am Handy.' };
+export const PHONE_FAQ_EN: Faq = { q: 'Can I import the file on my phone?', a: 'No. Google Calendar only lets you import on a computer, not on a phone or tablet. You can still prepare the file with the tool on your phone.' };
 
 export const GUIDES: Record<string, GuideDef> = {
   // ------------------------------------------------------------------ Datei zu groß
@@ -59,7 +60,6 @@ export const GUIDES: Record<string, GuideDef> = {
         { h2: 'Warum Teile unter 950 KB und nicht genau 1 MB?', html: '<p>„1 MB“ kann 1.000.000 oder 1.048.576 Byte bedeuten. Mit 950.000 Byte bleibt jeder Teil in beiden Fällen sicher darunter. Die angezeigte Größe ist byte-genau die Größe der Datei, die du herunterlädst.</p>' }
       ],
       faq: [
-        PHONE_FAQ_DE,
         { q: 'Gilt die 1-MB-Grenze auch für ICS-Dateien?', a: 'Ja. Google nennt die Grenze von 1 MB für CSV- und ICS-Dateien gleichermaßen.' },
         { q: 'Wie viele Termine darf eine Datei haben?', a: 'Google nennt für den Import keine Höchstzahl an Terminen – entscheidend ist die Dateigröße. Für Workspace-Konten schreibt Google allerdings, dass man nach mehr als 100.000 neu angelegten Terminen in kurzer Zeit für einige Stunden keine Termine mehr anlegen oder bearbeiten kann.' },
         { q: 'Kann ich alle Teile als ZIP-Datei importieren?', a: 'Nein. Eine ZIP-Datei musst du zuerst entpacken und dann jede Datei einzeln importieren.' },
@@ -88,7 +88,6 @@ export const GUIDES: Record<string, GuideDef> = {
         { h2: 'Why parts under 950 KB and not exactly 1 MB?', html: '<p>“1 MB” can mean 1,000,000 or 1,048,576 bytes. At 950,000 bytes every part stays safely below either. The size shown is exactly the size of the file you download.</p>' }
       ],
       faq: [
-        PHONE_FAQ_EN,
         { q: 'Does the 1 MB limit apply to ICS files too?', a: 'Yes. Google states the 1 MB limit for both CSV and ICS files.' },
         { q: 'How many events can a file contain?', a: 'Google doesn’t state a maximum number of events per import – what matters is the file size. For Workspace accounts, Google does say that creating more than 100,000 events in a short period can stop you from creating or editing events for a few hours.' },
         { q: 'Can I import all parts as one ZIP file?', a: 'No. You need to unzip it first and import each file separately.' },
@@ -134,7 +133,6 @@ export const GUIDES: Record<string, GuideDef> = {
         { h2: 'Und wenn der Import schiefgeht?', html: '<p>Einen „Rückgängig“-Knopf für Importe gibt es nicht. Einen eigens angelegten Kalender kannst du aber komplett löschen; im Hauptkalender ginge das nur, indem du alle Termine löschst. Details: {undo|Import rückgängig machen}.</p>' }
       ],
       faq: [
-        PHONE_FAQ_DE,
         { q: 'Was bedeutet „google calendar usage limits exceeded“?', a: 'Gemeint sind die Nutzungslimits, die Google gegen Missbrauch setzt. Für Workspace-Konten nennt Google zum Beispiel mehr als 100.000 neu angelegte Termine in kurzer Zeit; danach kann man für einige Stunden keine Termine bearbeiten.' },
         { q: 'Wie groß darf eine ICS-Datei für Google Kalender sein?', a: 'Höchstens 1 MB – dieselbe Grenze wie für CSV-Dateien.' },
         { q: 'Warum lehnt Google meine CSV mit Semikolon ab?', a: 'Google Kalender arbeitet nur mit Komma als Trennzeichen. Dateien mit Semikolon oder Doppelpunkt funktionieren nicht.' }
@@ -172,7 +170,6 @@ export const GUIDES: Record<string, GuideDef> = {
         { h2: 'And if the import goes wrong?', html: '<p>There is no undo button for imports. You can, however, delete a calendar you created specifically for the import; in your main calendar you could only delete all events. Details: {undo|undo a Google Calendar import}.</p>' }
       ],
       faq: [
-        PHONE_FAQ_EN,
         { q: 'What does “Google Calendar usage limits exceeded” mean?', a: 'It refers to the limits Google sets against abuse. For Workspace accounts, Google mentions for example more than 100,000 events created in a short period; after that, you may not be able to edit events for a few hours.' },
         { q: 'How large can an ICS file for Google Calendar be?', a: 'At most 1 MB – the same limit as for CSV files.' },
         { q: 'Why does Google reject my semicolon CSV?', a: 'Google Calendar only works with commas as separators. Files that use semicolons or colons don’t work.' }
@@ -282,7 +279,6 @@ export const GUIDES: Record<string, GuideDef> = {
         { h2: 'Worauf du achten solltest', html: '<ul><li><strong>Gäste und Konferenzdaten</strong> übernimmt Google beim Import nicht – Einladungen müssen gegebenenfalls neu verschickt werden.</li><li><strong>Nicht zu viele Kalender auf einmal:</strong> Für Workspace-Konten nennt Google eine Einschränkung, wenn in kurzer Zeit mehr als 60 Kalender angelegt werden.</li><li><strong>Erst in einen neuen Kalender importieren:</strong> So lässt sich ein missglückter Import mit einem Klick löschen – siehe {undo|Import rückgängig machen}.</li><li><strong>Datenschutz:</strong> Stehen Patienten- oder Kundendaten in den Terminen, kannst du Telefonnummern und E-Mail-Adressen vorher ausblenden.</li></ul>' }
       ],
       faq: [
-        PHONE_FAQ_DE,
         { q: 'Kann ich einen Google Kalender auf ein anderes Konto übertragen?', a: 'Ja: als ICS exportieren und im anderen Konto am Computer importieren. Gäste und Konferenzdaten übernimmt Google dabei nicht. Ist die Datei größer als 1 MB, teilt das Werkzeug sie auf.' },
         { q: 'Was passiert mit Terminen, bei denen zwei Personen eingetragen sind?', a: 'Du entscheidest: Entweder landen sie in jedem passenden Kalender oder nur im ersten. Das Werkzeug zeigt, wie viele Termine betroffen sind.' },
         { q: 'Bleiben Serientermine beim Aufteilen erhalten?', a: 'Ja. Eine Serie bleibt mit ihren geänderten Einzelterminen in derselben Datei und wird als echte Serie importiert.' }
@@ -310,7 +306,6 @@ export const GUIDES: Record<string, GuideDef> = {
         { h2: 'What to watch out for', html: '<ul><li><strong>Guests and conference data</strong> aren’t imported by Google – invitations may need to be sent again.</li><li><strong>Not too many calendars at once:</strong> for Workspace accounts, Google mentions a restriction if more than 60 calendars are created in a short period.</li><li><strong>Import into a new calendar first:</strong> that way a failed import can be deleted in one go – see {undo|undo an import}.</li><li><strong>Privacy:</strong> if events contain patient or customer data, you can hide phone numbers and email addresses beforehand.</li></ul>' }
       ],
       faq: [
-        PHONE_FAQ_EN,
         { q: 'How do I migrate a Google Calendar to Google Workspace?', a: 'Export it as ICS and import it on a computer in the other account. Google doesn’t transfer guests and conference data. If the file is larger than 1 MB, the tool splits it.' },
         { q: 'What happens to events that list two people?', a: 'You decide: they either go into every matching calendar or only into the first. The tool shows how many events are affected.' },
         { q: 'Do recurring events survive the split?', a: 'Yes. A series stays in the same file together with its changed occurrences and is imported as a real series.' }
@@ -345,7 +340,6 @@ export const GUIDES: Record<string, GuideDef> = {
         { h2: 'Andere Excel-Listen', html: '<p>Vereinstermine, Dienstpläne oder Schulungen aus Excel funktionieren genauso: Das Werkzeug ordnet die Spalten zu (Titel, Datum, Uhrzeit, Ort) und erzeugt wahlweise eine Google-CSV oder eine ICS-Datei. Telefonnummern oder Adressen in der Liste erkennt es und bietet an, sie wegzulassen.</p>' }
       ],
       faq: [
-        PHONE_FAQ_DE,
         { q: 'Muss ich meine Excel-Datei vorher als CSV speichern?', a: 'Nein. Das Werkzeug liest XLSX-Dateien direkt – im Browser, ohne Upload.' },
         { q: 'Kann ich das Alter im Termin anzeigen?', a: 'Ein mitlaufendes Alter kann eine jährliche Wiederholung nicht abbilden. Das Werkzeug schreibt stattdessen das Geburtsjahr in den Titel, z. B. „Geburtstag: Erika Huber (geb. 1948)“.' },
         { q: 'Werden die Geburtstage als ganztägige Termine angelegt?', a: 'Ja, ganztägig und als „frei“ markiert, damit sie deinen Kalender nicht blockieren.' }
@@ -373,7 +367,6 @@ export const GUIDES: Record<string, GuideDef> = {
         { h2: 'Other Excel lists', html: '<p>Club events, rosters or training schedules from Excel work the same way: the tool maps the columns (title, date, time, location) and creates either a Google CSV or an ICS file. It detects phone numbers or addresses in the list and offers to leave them out.</p>' }
       ],
       faq: [
-        PHONE_FAQ_EN,
         { q: 'Do I need to save my Excel file as CSV first?', a: 'No. The tool reads XLSX files directly – in your browser, without uploading.' },
         { q: 'Can the event show the person’s age?', a: 'A yearly recurring event can’t carry a changing age. Instead, the tool puts the birth year in the title, e.g. “Birthday: Erika Huber (born 1948)”.' },
         { q: 'Are birthdays created as all-day events?', a: 'Yes – all-day and marked as “free”, so they don’t block your calendar.' }
@@ -408,7 +401,6 @@ export const GUIDES: Record<string, GuideDef> = {
         { h2: 'ICS-Datei vorher ansehen', html: '<p>Bevor du importierst, kannst du die Datei im Werkzeug öffnen: Es zeigt Zahl der Termine, Zeitraum, Serien, Zeitzonen und ob Telefonnummern oder E-Mail-Adressen darin stehen. Enthält die Datei mehrere Personen oder Themen, kannst du sie {split|auf mehrere Kalender aufteilen}.</p>' }
       ],
       faq: [
-        PHONE_FAQ_DE,
         { q: 'Warum kann ich keine ICS-Datei in den Google Kalender importieren?', a: 'Häufige Gründe: Die Datei ist größer als 1 MB, sie ist noch in einer ZIP-Datei verpackt, sie hat Formatfehler – oder du versuchst es am Handy. Der Import geht nur am Computer.' },
         { q: 'Werden Serientermine aus einer ICS-Datei übernommen?', a: 'Ja, aus ICS-Dateien schon. Nur aus CSV-Dateien legt Google Serien als Einzeltermine an.' },
         { q: 'Kann ich eine ICS-Datei öffnen, ohne sie zu importieren?', a: 'Ja – im Werkzeug. Es zeigt alle Kennzahlen und läuft komplett im Browser, ohne Upload.' }
@@ -436,7 +428,6 @@ export const GUIDES: Record<string, GuideDef> = {
         { h2: 'Look inside an ICS file first', html: '<p>Before importing, you can open the file in the tool: it shows the number of events, date range, recurring events, time zones and whether it contains phone numbers or email addresses. If it covers several people or topics, you can {split|split it into several calendars}.</p>' }
       ],
       faq: [
-        PHONE_FAQ_EN,
         { q: 'Why can’t I import an ICS file into Google Calendar?', a: 'Common reasons: the file is larger than 1 MB, it’s still packed in a ZIP file, it has formatting errors – or you’re trying on a phone. Import only works on a computer.' },
         { q: 'Are recurring events from an ICS file kept?', a: 'Yes, from ICS files they are. Only from CSV files does Google create recurring events as single events.' },
         { q: 'Can I open an ICS file without importing it?', a: 'Yes – in the tool. It shows all key figures and runs entirely in your browser, without uploading.' }
@@ -469,7 +460,6 @@ export const GUIDES: Record<string, GuideDef> = {
         { h2: 'Ohne Upload umwandeln', html: '<p>Viele Online-Konverter laden deine Datei auf einen Server. Bei Terminlisten mit Namen, Telefonnummern oder Patientendaten ist das heikel. Das Werkzeug arbeitet ausschließlich in deinem Browser; eine Sicherheitsregel verbietet der Seite Verbindungen zu fremden Servern. Erkannte persönliche Daten kannst du vor dem Export weglassen oder kürzen.</p>' }
       ],
       faq: [
-        PHONE_FAQ_DE,
         { q: 'Kann ChatGPT eine ICS-Datei erstellen?', a: 'Ja, KI-Chatbots können den Text einer ICS-Datei erzeugen. Prüfe das Ergebnis aber: Der Rahmen muss stimmen (BEGIN:VCALENDAR, VERSION, PRODID, END:VCALENDAR), Google nimmt höchstens 1 MB – und wenn du eine Terminliste mit persönlichen Daten in einen Chat kopierst, verlässt sie dein Gerät. Mit dem Werkzeug wandelst du ohne Upload um.' },
         { q: 'Werden Umlaute richtig übernommen?', a: 'Ja. Das Werkzeug erkennt auch den Windows-Zeichensatz von Excel und speichert die ICS-Datei in UTF-8.' },
         { q: 'Kann ich ICS auch zurück in CSV umwandeln?', a: 'Ja, als Google-CSV – mit der Einschränkung, dass Serientermine dabei nicht als Serie dargestellt werden können.' }
@@ -495,7 +485,6 @@ export const GUIDES: Record<string, GuideDef> = {
         { h2: 'Convert without uploading', html: '<p>Many online converters upload your file to a server. With event lists containing names, phone numbers or patient data, that’s risky. The tool works exclusively in your browser; a security policy forbids the page to connect to other servers. You can leave out or shorten detected personal data before exporting.</p>' }
       ],
       faq: [
-        PHONE_FAQ_EN,
         { q: 'Can ChatGPT make an ICS file?', a: 'Yes, AI chatbots can generate the text of an ICS file. Check the result, though: the frame must be right (BEGIN:VCALENDAR, VERSION, PRODID, END:VCALENDAR), Google accepts at most 1 MB – and if you paste an event list with personal data into a chat, it leaves your device. With the tool you convert without uploading.' },
         { q: 'Are special characters kept?', a: 'Yes. The tool also detects Excel’s Windows character set and saves the ICS file as UTF-8.' },
         { q: 'Can I convert ICS back to CSV?', a: 'Yes, as a Google CSV – with the limitation that recurring events can’t be represented as a series.' }
@@ -527,7 +516,6 @@ export const GUIDES: Record<string, GuideDef> = {
         { h2: 'So planst du den nächsten Import', html: '<ol><li>In Google Kalender einen neuen Kalender anlegen, z. B. „Import 2026“.</li><li>Die Datei im Werkzeug prüfen und, wenn nötig, {tooLarge|in Teile unter 1 MB aufteilen}.</li><li>Jeden Teil in den neuen Kalender importieren – <strong>einmal</strong> auf „Importieren“ klicken.</li><li>Ergebnis prüfen. Passt etwas nicht, den Kalender löschen und neu beginnen.</li></ol><p>Willst du dieselben Termine ein zweites Mal importieren, kannst du im Werkzeug unter „Aufräumen“ neue Termin-Kennungen vergeben.</p>' }
       ],
       faq: [
-        PHONE_FAQ_DE,
         { q: 'Kann ich nur die importierten Termine im Hauptkalender löschen?', a: 'Nicht auf einmal. Google bietet für den Hauptkalender nur „alle Termine löschen“ an. Deshalb lieber in einen eigenen, neuen Kalender importieren.' },
         { q: 'Gehen beim Löschen eines Kalenders auch geteilte Termine verloren?', a: 'Ja. Wenn du einen Kalender löschst, den du mit anderen teilst, wird er laut Google für alle entfernt.' },
         { q: 'Warum zeigt Google nach dem Import „Processed zero events“?', a: 'Laut Google oft, weil zweimal auf „Importieren“ geklickt wurde. Die Termine sind dann meist schon vom ersten Klick da.' }
@@ -552,7 +540,6 @@ export const GUIDES: Record<string, GuideDef> = {
         { h2: 'How to set up your next import', html: '<ol><li>Create a new calendar in Google Calendar, e.g. “Import 2026”.</li><li>Check the file in the tool and, if necessary, {tooLarge|split it into parts under 1 MB}.</li><li>Import every part into the new calendar – click “Import” <strong>once</strong>.</li><li>Check the result. If something is wrong, delete the calendar and start again.</li></ol><p>If you want to import the same events a second time, you can assign new event IDs in the tool under “Clean up”.</p>' }
       ],
       faq: [
-        PHONE_FAQ_EN,
         { q: 'Can I delete only the imported events in my primary calendar?', a: 'Not in one go. For the primary calendar, Google only offers “delete all events”. That’s why it’s better to import into a separate, new calendar.' },
         { q: 'Are shared events lost when I delete a calendar?', a: 'Yes. According to Google, if you delete a calendar you share with others, it is removed for everyone.' },
         { q: 'Why does Google show “Processed zero events” after importing?', a: 'According to Google, often because Import was clicked twice. The events are then usually already there from the first click.' }

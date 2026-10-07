@@ -1,7 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import { GUIDES as KEYS, LEGAL, ROUTES, path, url, type Lang, type PageKey } from '../i18n/routes';
-import { GUIDES } from '../content/guides';
+import { GUIDES, PHONE_FAQ_DE, PHONE_FAQ_EN } from '../content/guides';
 import { LEGAL_PAGES } from '../content/legal';
 import { SRC, STAND } from '../content/sources';
 import { linkify, strip } from '../content/links';
@@ -31,7 +31,7 @@ if (def && g) {
     { '@type': 'ListItem', position: 2, name: guidesLabel, item: url('home', lang) + '#ratgeber' },
     { '@type': 'ListItem', position: 3, name: g.crumb, item: url(key, lang) }
   ] };
-  const faq = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: g.faq.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) };
+  const faq = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: g.faq.filter((f) => f !== PHONE_FAQ_DE && f !== PHONE_FAQ_EN).map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) };
   const citation = def.sources.map((s) => ({ '@type': 'CreativeWork', name: SRC[s][lang], url: SRC[s].url }));
   const main = def.type === 'article'
     ? { '@context': 'https://schema.org', '@type': 'Article', headline: g.h1, description: g.description, inLanguage: lang, datePublished: STAND.iso, dateModified: STAND.iso, author, publisher: author, mainEntityOfPage: url(key, lang), image: 'https://freimoser.github.io' + path('home', 'de').replace(/\/$/, '') + `/og/${key}-${lang}.png`, citation }

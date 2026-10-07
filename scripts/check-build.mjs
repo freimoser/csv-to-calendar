@@ -34,6 +34,7 @@ const exists = (route) => {
 const idsOf = (h) => new Set([...h.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]));
 
 const titles = new Map();
+const faqSeen = new Map();
 const incoming = new Map();
 const indexable = new Set();
 
@@ -68,7 +69,16 @@ for (const [route, h] of html) {
   const ogImg = get(h, /<meta property="og:image" content="([^"]*)"/);
   if (!ogImg) fail(route, 'og:image fehlt');
   else if (!exists(ogImg.replace(SITE, ''))) fail(route, `og:image fehlt im Build: ${ogImg}`);
-  for (const p of ['og:title', 'og:description', 'og:url']) if (!h.includes(`property="${p}"`)) fail(route, `${p} fehlt`);
+  for (const p of is404 ? ['og:title', 'og:description'] : ['og:title', 'og:description', 'og:url']) if (!h.includes(`property="${p}"`)) fail(route, `${p} fehlt`);
+  if (is404 && /rel="canonical"/.test(h)) fail(route, '404-Seite darf kein Canonical haben');
+  // FAQPage: dieselbe Frage darf nur auf einer Seite ausgezeichnet sein (Google-Richtlinie für FAQ-Markup)
+  for (const m of h.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) {
+    let data; try { data = JSON.parse(m[1]); } catch { fail(route, 'ungültiges JSON-LD'); continue; }
+    if (data['@type'] === 'FAQPage') for (const q of data.mainEntity) {
+      if (faqSeen.has(q.name)) fail(route, `FAQ-Frage auch auf ${faqSeen.get(q.name)} ausgezeichnet: ${q.name}`);
+      else faqSeen.set(q.name, route);
+    }
+  }
   if (!noindex && !is404) {
     indexable.add(route);
     const hl = { de: get(h, /hreflang="de" href="([^"]*)"/), en: get(h, /hreflang="en" href="([^"]*)"/), x: get(h, /hreflang="x-default" href="([^"]*)"/) };
