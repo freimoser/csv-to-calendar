@@ -40,16 +40,23 @@ export interface IcsInput {
 
 /** Liest eine ICS-Datei oder eine ZIP-Datei mit ICS-Dateien (z. B. den Google-Kalender-Export). */
 export function readIcsInput(name: string, bytes: Uint8Array): IcsInput {
+  return readIcsInputs([{ name, bytes }]);
+}
+
+/** Liest mehrere ICS- und ZIP-Dateien auf einmal; jede ICS-Datei wird ein eigener Kalender. */
+export function readIcsInputs(inputs: { name: string; bytes: Uint8Array }[]): IcsInput {
   const files: { name: string; bytes: Uint8Array }[] = [];
   const skipped: string[] = [];
-  if (bytes[0] === 0x50 && bytes[1] === 0x4b) {
-    const entries = unzipSync(bytes);
-    for (const [path, data] of Object.entries(entries)) {
-      if (path.endsWith('/') || /(^|\/)(__MACOSX|\.)/.test(path)) continue;
-      if (/\.(ics|ical|ifb)$/i.test(path)) files.push({ name: path.split('/').pop() || path, bytes: data });
-      else skipped.push(path.split('/').pop() || path);
-    }
-  } else files.push({ name, bytes });
+  for (const { name, bytes } of inputs) {
+    if (bytes[0] === 0x50 && bytes[1] === 0x4b) {
+      const entries = unzipSync(bytes);
+      for (const [path, data] of Object.entries(entries)) {
+        if (path.endsWith('/') || /(^|\/)(__MACOSX|\.)/.test(path)) continue;
+        if (/\.(ics|ical|ifb)$/i.test(path)) files.push({ name: path.split('/').pop() || path, bytes: data });
+        else skipped.push(path.split('/').pop() || path);
+      }
+    } else files.push({ name, bytes });
+  }
 
   const calendars: IcsCalendar[] = [];
   let eventId = 0;
@@ -66,6 +73,6 @@ export function readIcsInput(name: string, bytes: Uint8Array): IcsInput {
   return {
     kind: 'ics', calendars, skipped,
     files: files.map((f) => ({ name: f.name, bytes: f.bytes.length })),
-    totalBytes: bytes.length
+    totalBytes: inputs.reduce((a, x) => a + x.bytes.length, 0)
   };
 }

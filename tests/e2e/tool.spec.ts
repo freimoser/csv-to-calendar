@@ -73,6 +73,28 @@ test('Google-Export als ZIP mit zwei Kalendern', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Privat' })).toBeVisible();
 });
 
+test('Mehrere ICS-Dateien auf einmal werden getrennte Kalender', async ({ page }) => {
+  await page.goto('');
+  await ready(page);
+  await page.locator('input[type=file]').setInputFiles([
+    { name: 'anna.ics', mimeType: 'text/calendar', buffer: Buffer.from(samplePracticeIcs({ perYear: 30, seed: 3, name: 'Anna' })) },
+    { name: 'ben.ics', mimeType: 'text/calendar', buffer: Buffer.from(samplePracticeIcs({ perYear: 20, seed: 4, name: 'Ben' })) }
+  ]);
+  await expect(page.getByText(/2 Kalenderdateien \(ICS\)/)).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole('heading', { name: 'Anna', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Ben', exact: true })).toBeVisible();
+});
+
+test('Gemischte Dateien: verständlicher Hinweis', async ({ page }) => {
+  await page.goto('');
+  await ready(page);
+  await page.locator('input[type=file]').setInputFiles([
+    { name: 'a.ics', mimeType: 'text/calendar', buffer: Buffer.from(samplePracticeIcs({ perYear: 5 })) },
+    { name: 'b.csv', mimeType: 'text/csv', buffer: Buffer.from('Subject,Start Date\nTest,05/30/2026\n') }
+  ]);
+  await expect(page.getByRole('alert')).toContainText('Mehrere Dateien auf einmal');
+});
+
 test('CSV: Semikolon, Windows-Zeichensatz, Datenschutz und zeilengenaue Fehler', async ({ page }) => {
   await page.goto('');
   await upload(page, 'termine.csv', encodeWindows1252(samplePracticeCsv({ rows: 400, brokenRows: true })), 'text/csv');

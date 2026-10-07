@@ -4,7 +4,7 @@
 
 import { zipSync } from 'fflate';
 import type { IcsCalendar, IcsEvent } from './ics';
-import { decodeText, readIcsInput } from './input';
+import { decodeText, readIcsInput, readIcsInputs } from './input';
 import { calendarStats, suggest, type CalendarStats, type Suggestion } from './analyze';
 import {
   ALL, NO_CLEAN, NO_SPLIT, PART_LIMIT, assign, buildGroups, buildPart, cleanedSizes, partFileName, planCalendars, select,
@@ -100,6 +100,19 @@ export function loadIcs(name: string, bytes: Uint8Array): Loaded {
   S.kind = 'ics';
   S.fileName = name;
   S.totalBytes = bytes.length;
+  S.files = input.files;
+  S.skipped = input.skipped;
+  S.table = null;
+  setCalendars(input.calendars);
+  return loadedInfo();
+}
+
+/** Mehrere ICS-/ZIP-Dateien auf einmal – jede Datei wird ein eigener Kalender. */
+export function loadIcsMany(list: { name: string; bytes: Uint8Array }[]): Loaded {
+  const input = readIcsInputs(list);
+  S.kind = 'ics';
+  S.fileName = list.map((f) => f.name).slice(0, 3).join(', ') + (list.length > 3 ? ' …' : '');
+  S.totalBytes = input.totalBytes;
   S.files = input.files;
   S.skipped = input.skipped;
   S.table = null;
@@ -252,6 +265,7 @@ export { ALL, NO_CLEAN, NO_SPLIT, PART_LIMIT };
 
 export type Request =
   | { type: 'loadIcs'; name: string; bytes: Uint8Array }
+  | { type: 'loadIcsMany'; files: { name: string; bytes: Uint8Array }[] }
   | { type: 'loadCsv'; name: string; bytes: Uint8Array }
   | { type: 'loadRows'; name: string; rows: string[][]; totalBytes: number }
   | { type: 'convert'; roles: Record<number, Column['role']>; options: ConvertOptions }
@@ -264,6 +278,7 @@ export type Request =
 export function handle(msg: Request): unknown {
   switch (msg.type) {
     case 'loadIcs': return loadIcs(msg.name, msg.bytes);
+    case 'loadIcsMany': return loadIcsMany(msg.files);
     case 'loadCsv': return loadCsv(msg.name, msg.bytes);
     case 'loadRows': return loadRows(msg.name, msg.rows, msg.totalBytes);
     case 'convert': return convertTable(msg.roles, msg.options);

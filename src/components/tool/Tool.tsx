@@ -152,9 +152,26 @@ function App() {
     }
   }
 
-  async function openFile(f: File | undefined) {
-    if (!f) return;
-    await openBytes(f.name, new Uint8Array(await f.arrayBuffer()));
+  async function openFiles(list: FileList | File[] | null | undefined) {
+    const files = list ? [...list] : [];
+    if (!files.length) return;
+    if (files.length === 1) { await openBytes(files[0].name, new Uint8Array(await files[0].arrayBuffer())); return; }
+    setError('');
+    setScreen('loading');
+    try {
+      const read = await Promise.all(files.map(async (f) => ({ name: f.name, bytes: new Uint8Array(await f.arrayBuffer()) })));
+      if (!read.every((f) => ['ics', 'zip'].includes(detect(f.name, f.bytes)))) { setError(t('start.multiMixed')); setScreen('start'); return; }
+      const info = await call<Loaded>({ type: 'loadIcsMany', files: read }, read.map((f) => f.bytes.buffer));
+      setTable(null);
+      if (!info.calendars.some((c) => c.events > 0)) { setError(t('start.empty')); setScreen('start'); return; }
+      setLoaded(info);
+      resetEdits('ics');
+      if (info.calendars.length > 1) setSplit((s) => ({ ...s, mode: 'source' }));
+      setScreen('analysis');
+    } catch (e) {
+      setError(t('start.error', { msg: e instanceof Error ? e.message : String(e) }));
+      setScreen('start');
+    }
   }
 
   async function sample(which: 'practice' | 'csv' | 'birthdays') {
@@ -216,7 +233,7 @@ function App() {
               class={'dropzone' + (drag ? ' drag' : '')}
               onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
               onDragLeave={() => setDrag(false)}
-              onDrop={(e) => { e.preventDefault(); setDrag(false); void openFile(e.dataTransfer?.files?.[0]); }}
+              onDrop={(e) => { e.preventDefault(); setDrag(false); void openFiles(e.dataTransfer?.files); }}
             >
               {screen === 'loading' ? (
                 <div class="loading" role="status" aria-live="polite"><span class="spinner" aria-hidden="true" />{t('start.loading')}</div>
@@ -226,9 +243,9 @@ function App() {
                   <div class="drop-title">{t('start.drop')}</div>
                   <div class="muted">{t('start.or')}</div>
                   <button type="button" class="btn btn-primary btn-xl" onClick={() => fileRef.current?.click()}>{t('start.choose')}</button>
-                  <input ref={fileRef} type="file" class="sr-only" tabIndex={-1} aria-hidden="true"
+                  <input ref={fileRef} type="file" multiple class="sr-only" tabIndex={-1} aria-hidden="true"
                     accept=".ics,.ical,.ifb,.zip,.csv,.txt,.tsv,.xlsx,.xlsm,.xls,.ods,text/calendar,text/csv"
-                    onChange={(e) => { void openFile((e.target as HTMLInputElement).files?.[0]); (e.target as HTMLInputElement).value = ''; }} />
+                    onChange={async (e) => { const input = e.target as HTMLInputElement; await openFiles(input.files); input.value = ''; }} />
                   <div class="muted small">{t('start.types')}</div>
                 </>
               )}
@@ -383,7 +400,7 @@ function Analysis({ loaded, table, plan, birthdays, onOther, onSimple, onEdit }:
   const fmtLabel = plan?.format === 'csv' ? t('an.asCsv') : t('an.asIcs');
   const sourceText = loaded.kind === 'table' && table
     ? t('an.source.table', { enc: table.encoding === 'windows-1252' ? 'Windows/Excel' : table.encoding === 'utf-8' ? 'UTF-8' : table.encoding, delim: t(('an.delim.' + table.delimiter) as 'an.delim.;'), rows: n(table.rowCount) })
-    : loaded.files.length > 1 || /\.zip$/i.test(loaded.fileName) ? t('an.source.zip', { n: loaded.files.length }) : t('an.source.ics');
+    : /\.zip$/i.test(loaded.fileName) ? t('an.source.zip', { n: loaded.files.length }) : loaded.files.length > 1 ? t('an.source.many', { n: loaded.files.length }) : t('an.source.ics');
 
   return (
     <section class="stack" aria-labelledby="an-title">

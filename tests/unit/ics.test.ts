@@ -5,7 +5,7 @@ import { parseIcs } from '../../src/lib/ics';
 import { samplePracticeIcs, SAMPLE_STAFF } from '../../src/lib/sample';
 import { ALL, NO_CLEAN, NO_SPLIT, PART_LIMIT, assign, buildGroups, buildPart, cleanedSizes, planCalendars, select, type CleanOptions, type SplitConfig } from '../../src/lib/plan';
 import { calendarStats, suggest } from '../../src/lib/analyze';
-import { readIcsInput } from '../../src/lib/input';
+import { readIcsInput, readIcsInputs } from '../../src/lib/input';
 import { zipSync, strToU8 } from 'fflate';
 
 function validIcs(text: string) {
@@ -136,6 +136,16 @@ describe('ICS lesen, analysieren, aufteilen', () => {
       expect(t).toContain('X-WR-CALNAME:' + c.name);
       expect(utf8Len(t)).toBe(p.bytes);
     }
+  });
+
+  it('liest mehrere ICS-Dateien und ZIPs auf einmal mit fortlaufenden Kennungen', () => {
+    const a = samplePracticeIcs({ perYear: 20, name: 'A', seed: 5 });
+    const zip = zipSync({ 'x/B.ics': strToU8(samplePracticeIcs({ perYear: 10, name: 'B', seed: 6 })) });
+    const input = readIcsInputs([{ name: 'a.ics', bytes: strToU8(a) }, { name: 'export.zip', bytes: zip }]);
+    expect(input.calendars.map((c) => c.name)).toEqual(['A', 'B']);
+    expect(input.calendars.map((c) => c.index)).toEqual([0, 1]);
+    const all = input.calendars.flatMap((c) => c.events);
+    expect(new Set(all.map((e) => e.id)).size).toBe(all.length);
   });
 
   it('liest den Google-Export als ZIP mit mehreren Kalendern', () => {
