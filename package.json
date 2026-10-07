@@ -6,7 +6,7 @@
     "dev": "astro dev",
     "build": "astro build && node scripts/postbuild.mjs && node scripts/check-build.mjs",
     "check:launch": "node scripts/check-launch.mjs",
-    "assets": "node scripts/gen-assets.mjs",
+    "assets": "npm i --no-save sharp && node scripts/gen-assets.mjs",
     "preview": "astro preview",
     "test": "vitest run",
     "test:private": "vitest run --config vitest.private.config.ts",
@@ -19,8 +19,6 @@
     "@playwright/test": "^1.63.0",
     "@types/papaparse": "^5.5.2",
     "ical.js": "^2.2.1",
-    "lighthouse": "^13.5.0",
-    "sharp": "^0.35.5",
     "typescript": "^5.9.3",
     "vitest": "^5.0.3"
   },

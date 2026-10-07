@@ -26,7 +26,7 @@ npm test             # Einheitentests (Vitest)
 npm run build        # Build + Prüfung (SEO, Links, CSP, Sitemap, hreflang)
 npm run test:e2e     # Browser-Tests (Playwright)
 npm run check:launch # Livegang-Sperre (Impressum vollständig?)
-npm run assets       # Favicons und Vorschaubilder neu erzeugen
+npm run assets       # Favicons und Vorschaubilder neu erzeugen (installiert sharp temporär)
 ```
 
 Lighthouse lokal: `npm run build:lh`, dann `npm run preview` und in einem zweiten Terminal `npm run lighthouse`.
